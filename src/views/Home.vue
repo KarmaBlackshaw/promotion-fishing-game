@@ -1,8 +1,9 @@
 <template>
   <div class="game">
     <div class="indicator" id="indicator">CLICK TO CAST</div>
+    <img class="bait" id="bait" src="@/assets/floatBait.png" alt />
     <div class="game-content">
-      <div class="pond" @mouseover="mouseover" @mouseout="mouseout"></div>
+      <div class="pond" @mouseover="mouseover" @mouseout="mouseout" @click="throwBait"></div>
     </div>
   </div>
 </template>
@@ -12,6 +13,7 @@ import { gsap } from "gsap";
 export default {
   data: () => ({
     indicator: null,
+    bait: null,
 
     randomX: 0,
     randomY: 0,
@@ -20,28 +22,52 @@ export default {
     randomAngle: 0
   }),
 
+  async created() {
+    gsap.config({
+      force3D: false
+    });
+  },
+
   mounted() {
     this.indicator = document.getElementById("indicator");
+    this.bait = document.getElementById("bait");
     window.addEventListener("mousemove", this.mousemove);
+
+    // this.float(document.getElementById("bait"));
   },
 
   methods: {
-    floatBait() {
-      this.randomX = this.random(10, 20);
-      this.randomY = this.random(20, 30);
-      this.randomTime = this.random(3, 5);
-      this.randomTime2 = this.random(5, 10);
-      this.randomAngle = this.random(8, 12);
+    throwBait(e) {
+      gsap.fromTo(
+        this.bait,
+        1.5,
+        {
+          ease: "elastic.out(1, 0.4)",
+          css: {
+            left: e.pageX,
+            top: e.pageY - 200,
+            scaleY: 0,
+            scaleX: 0,
+            visibility: "hidden"
+          }
+        },
+        {
+          ease: "elastic.out(1, 0.4)",
+          css: {
+            left: e.pageX,
+            top: e.pageY,
+            scaleY: 1,
+            scaleX: 1,
+            visibility: "visible"
+          }
+        }
+      );
 
-      gsap.set(this.indicator, {
-        x: this.randomX(-1),
-        y: this.randomX(1),
-        rotation: this.randomAngle(-1)
-      });
+      this.float(this.bait);
+    },
 
-      this.moveX(this.indicator, 1);
-      this.moveY(this.indicator, -1);
-      this.rotate(this.indicator, 1);
+    mouseout() {
+      gsap.to(this.indicator, 0.1, { scale: 0, autoAlpha: 1 });
     },
 
     mouseover() {
@@ -57,14 +83,29 @@ export default {
       });
     },
 
-    mouseout() {
-      gsap.to(this.indicator, 0.1, { scale: 0, autoAlpha: 1 });
+    float(element) {
+      gsap.set(element, { clearProps: "all" });
+
+      this.randomX = this.random(5, 10);
+      this.randomY = this.random(10, 15);
+      this.randomTime = this.random(1, 3);
+      this.randomTime2 = this.random(1, 3);
+      this.randomAngle = this.random(4, 6);
+
+      gsap.set(element, {
+        x: this.randomX(-1),
+        y: this.randomX(1),
+        rotation: this.randomAngle(-1)
+      });
+
+      this.moveX(element, 1);
+      this.moveY(element, -1);
+      this.rotate(element, 1);
     },
 
     rotate(target, direction) {
       gsap.to(target, this.randomTime2(), {
         rotation: this.randomAngle(direction),
-        // delay: randomDelay(),
         ease: "Sine.easeInOut",
         onComplete: this.rotate,
         onCompleteParams: [target, direction * -1]
@@ -103,27 +144,35 @@ export default {
 $hookWidth: 100px;
 $hookHeight: 50px;
 
-.indicator {
-  position: absolute;
-  width: $hookWidth;
-  height: $hookHeight;
-  top: 50%;
-  left: 50%;
-  margin: (-$hookHeight) 0 0 (-$hookWidth);
-  border-radius: 80%;
-  backface-visibility: hidden;
-  z-index: 5;
-  pointer-events: none;
-  animation: floating 0.7s ease-in-out infinite alternate;
-  visibility: hidden;
-  font-size: 1rem;
-  font-weight: bold;
-  color: white;
-}
-
 .game {
   display: flex;
   justify-content: center;
+  user-select: none;
+
+  .indicator {
+    position: absolute;
+    width: $hookWidth;
+    height: $hookHeight;
+    top: 50%;
+    left: 50%;
+    margin: (-$hookHeight) 0 0 (-$hookWidth);
+    border-radius: 80%;
+    backface-visibility: hidden;
+    z-index: 5;
+    pointer-events: none;
+    animation: floating 0.7s ease-in-out infinite alternate;
+    visibility: hidden;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+  }
+
+  .bait {
+    position: absolute;
+    z-index: 3;
+    max-width: 20px;
+    visibility: hidden;
+  }
 
   .game-content {
     height: 500px;
