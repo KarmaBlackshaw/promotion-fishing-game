@@ -1,0 +1,11 @@
+
+@keyframes neon {
+  from {
+    box-shadow: 0 0 10px #fff, inset 0 0 20px#2ecc71, inset 0 0 30px#2ecc71,
+      inset 0 0 40px#2ecc71;
+  }
+  to {
+    box-shadow: 0 0 5px #fff, inset 0 0 10px#2ecc71, inset 0 0 15px#2ecc71,
+      inset 0 0 20px#2ecc71;
+  }
+}
