@@ -85,7 +85,7 @@ export default {
       return tl;
     },
 
-    throwBait(e) {
+    throwLure(e) {
       const tl = gsap.timeline();
 
       tl.fromTo(
@@ -116,13 +116,13 @@ export default {
 
       this.isBaiting = true;
 
-      tl.add(this.throwBait(e));
+      tl.add(this.throwLure(e));
       tl.add(this.animateWave(), 1);
 
-      this.floatBait();
+      this.floatLure();
     },
 
-    floatBait() {
+    floatLure() {
       this.resetElements();
 
       let vue = this;
@@ -135,7 +135,7 @@ export default {
       });
     },
 
-    biteHook() {
+    biteLure() {
       const tl = gsap.timeline();
 
       tl.to(this.baitContainer, 0.5, {
@@ -146,7 +146,7 @@ export default {
       return tl;
     },
 
-    getHook() {
+    getLure() {
       const tl = gsap.timeline();
 
       tl.to(this.baitContainer, 0.3, {
@@ -162,8 +162,8 @@ export default {
       let tl = gsap.timeline();
       let vue = this;
 
-      tl.add(this.biteHook(), 0);
-      tl.add(this.getHook(), 0.3);
+      tl.add(this.biteLure(), 0);
+      tl.add(this.getLure(), 0.3);
       tl.then(x => {
         vue.isBaiting = false;
         vue.resetElements();
@@ -176,10 +176,8 @@ export default {
 
     mousemove(e) {
       this.gsap.to(this.indicator, 0.2, {
-        css: {
-          left: e.pageX + this.indicator.clientWidth / 2,
-          top: e.pageY + this.indicator.clientHeight / 2
-        }
+        left: e.pageX + this.indicator.clientWidth / 2,
+        top: e.pageY + this.indicator.clientHeight / 2
       });
     }
   }
