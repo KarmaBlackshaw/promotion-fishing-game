@@ -4,10 +4,16 @@
 
     <div class="bait-container" id="bait-container">
       <img class="bait" id="bait" src="@/assets/lure.png" alt />
-      <div class="wave" id="wave"></div>
+      <div class="wave" id="wave" />
     </div>
     <div class="game-content">
-      <div class="pond" id="pond" @mouseover="mouseover" @mouseout="mouseout" @click="throwBait" />
+      <div
+        class="pond"
+        id="pond"
+        @mouseover="setIndicator(1)"
+        @mouseout="setIndicator(0)"
+        @click="startBait"
+      />
     </div>
   </div>
 </template>
@@ -31,6 +37,15 @@ export default {
     this.initElements();
   },
 
+  watch: {
+    isBaiting(val) {
+      this.gsap.to(this.pond, 1, {
+        opacity: val ? 0 : 1,
+        ease: val ? "power4.out" : "power4.in"
+      });
+    }
+  },
+
   methods: {
     initElements() {
       this.indicator = document.getElementById("indicator");
@@ -46,12 +61,33 @@ export default {
       });
     },
 
+    animateWave() {
+      const tl = gsap.timeline();
+
+      tl.fromTo(
+        this.wave,
+        2,
+        {
+          width: "0px",
+          height: "0px",
+          opacity: 0.5
+        },
+        {
+          y: "-=3px",
+          ease: "Linear.easeNone",
+          width: "50px",
+          height: "10px",
+          visibility: "visible",
+          repeat: 2,
+          opacity: 0
+        }
+      );
+      return tl;
+    },
+
     throwBait(e) {
-      if (this.isBaiting) return;
+      const tl = gsap.timeline();
 
-      let tl = gsap.timeline();
-
-      this.isBaiting = true;
       tl.fromTo(
         this.baitContainer,
         1.3,
@@ -67,37 +103,21 @@ export default {
           left: e.pageX - 25,
           scale: 1,
           visibility: "visible"
-        },
-        0
-      )
-        .fromTo(
-          this.wave,
-          2,
-          {
-            width: "0px",
-            height: "0px",
-            opacity: 0.5
-          },
-          {
-            y: "-=3px",
-            ease: "Linear.easeNone",
-            width: "50px",
-            height: "10px",
-            visibility: "visible",
-            repeat: 2,
-            opacity: 0
-          },
-          1
-        )
-        .to(
-          this.pond,
-          1,
-          {
-            opacity: 0,
-            ease: "power4.out"
-          },
-          1
-        );
+        }
+      );
+
+      return tl;
+    },
+
+    startBait(e) {
+      if (this.isBaiting) return;
+
+      let tl = gsap.timeline();
+
+      this.isBaiting = true;
+
+      tl.add(this.throwBait(e));
+      tl.add(this.animateWave(), 1);
 
       this.floatBait();
     },
@@ -115,49 +135,43 @@ export default {
       });
     },
 
+    biteHook() {
+      const tl = gsap.timeline();
+
+      tl.to(this.baitContainer, 0.5, {
+        ease: "power4.out",
+        y: "+=10"
+      });
+
+      return tl;
+    },
+
+    getHook() {
+      const tl = gsap.timeline();
+
+      tl.to(this.baitContainer, 0.3, {
+        ease: "power4.in",
+        y: "-=100",
+        opacity: 0
+      });
+
+      return tl;
+    },
+
     catchFish() {
       let tl = gsap.timeline();
       let vue = this;
-      tl.to(
-        this.baitContainer,
-        0.5,
-        {
-          ease: "power4.out",
-          y: "+=10"
-        },
-        0
-      )
-        .to(
-          this.baitContainer,
-          0.3,
-          {
-            ease: "power4.in",
-            y: "-=100",
-            opacity: 0
-          },
-          0.3
-        )
-        .to(
-          this.pond,
-          1,
-          {
-            opacity: 1,
-            ease: "power4.in"
-          },
-          1
-        )
-        .then(x => {
-          vue.isBaiting = false;
-          vue.resetElements();
-        });
+
+      tl.add(this.biteHook(), 0);
+      tl.add(this.getHook(), 0.3);
+      tl.then(x => {
+        vue.isBaiting = false;
+        vue.resetElements();
+      });
     },
 
-    mouseout() {
-      this.gsap.to(this.indicator, 0.1, { scale: 0, autoAlpha: 1 });
-    },
-
-    mouseover() {
-      this.gsap.to(this.indicator, 0.15, { scale: 1, autoAlpha: 1 });
+    setIndicator(scale) {
+      this.gsap.to(this.indicator, 0.15, { scale, autoAlpha: 1 });
     },
 
     mousemove(e) {
