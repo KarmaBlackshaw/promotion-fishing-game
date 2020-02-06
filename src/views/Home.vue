@@ -1,5 +1,5 @@
 <template>
-  <div class="game">
+  <div class="game" @mousemove="mousemove">
     <div class="indicator" id="indicator" v-text="isBaiting ? '' : 'CLICK TO CAST'"></div>
 
     <div class="bait-container" id="bait-container">
@@ -21,14 +21,14 @@ export default {
     baitContainer: null,
     gsap: null,
     pond: null,
-    isBaiting: false
+    isBaiting: false,
+    timeline: null
   }),
 
   mounted() {
     this.gsap = gsap;
+    this.masterTimeline = gsap.timeline;
     this.initElements();
-
-    window.addEventListener("mousemove", this.mousemove);
   },
 
   methods: {
@@ -47,13 +47,11 @@ export default {
     },
 
     throwBait(e) {
-      if (this.isBaiting) {
-        this.resetElements();
-      }
+      if (this.isBaiting) return;
 
-      let vue = this;
       let tl = gsap.timeline();
 
+      this.isBaiting = true;
       tl.fromTo(
         this.baitContainer,
         1.3,
@@ -68,10 +66,7 @@ export default {
           top: e.pageY,
           left: e.pageX - 25,
           scale: 1,
-          visibility: "visible",
-          onComplete: () => {
-            vue.isBaiting = true;
-          }
+          visibility: "visible"
         },
         0
       )
@@ -153,6 +148,7 @@ export default {
         )
         .then(x => {
           vue.isBaiting = false;
+          vue.resetElements();
         });
     },
 
