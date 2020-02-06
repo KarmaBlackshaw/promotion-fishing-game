@@ -1,9 +1,13 @@
 <template>
   <div class="game">
-    <div class="indicator" id="indicator">CLICK TO CAST</div>
-    <img class="bait" id="bait" src="@/assets/floatBait.png" alt />
+    <div class="indicator" id="indicator" v-text="isBaiting ? '' : 'CLICK TO CAST'"></div>
+
+    <div class="bait-container" id="bait-container">
+      <img class="bait" id="bait" src="@/assets/lure.png" alt />
+      <div class="wave" id="wave"></div>
+    </div>
     <div class="game-content">
-      <div class="pond" @mouseover="mouseover" @mouseout="mouseout" @click="throwBait"></div>
+      <div class="pond" id="pond" @mouseover="mouseover" @mouseout="mouseout" @click="throwBait" />
     </div>
   </div>
 </template>
@@ -14,131 +18,165 @@ export default {
   data: () => ({
     indicator: null,
     bait: null,
-
-    randomX: 0,
-    randomY: 0,
-    randomTime: 0,
-    randomTime2: 0,
-    randomAngle: 0
+    baitContainer: null,
+    gsap: null,
+    pond: null,
+    isBaiting: false
   }),
 
-  async created() {
-    gsap.config({
-      force3D: false
-    });
-  },
-
   mounted() {
-    this.indicator = document.getElementById("indicator");
-    this.bait = document.getElementById("bait");
-    window.addEventListener("mousemove", this.mousemove);
+    this.gsap = gsap;
+    this.initElements();
 
-    // this.float(document.getElementById("bait"));
+    window.addEventListener("mousemove", this.mousemove);
   },
 
   methods: {
+    initElements() {
+      this.indicator = document.getElementById("indicator");
+      this.bait = document.getElementById("bait");
+      this.pond = document.getElementById("pond");
+      this.wave = document.getElementById("wave");
+      this.baitContainer = document.getElementById("bait-container");
+    },
+
+    resetElements() {
+      this.gsap.set([this.baitContainer, this.lure, this.wave], {
+        clearProps: "all"
+      });
+    },
+
     throwBait(e) {
-      gsap.fromTo(
-        this.bait,
-        1.5,
+      if (this.isBaiting) {
+        this.resetElements();
+      }
+
+      let vue = this;
+      let tl = gsap.timeline();
+
+      tl.fromTo(
+        this.baitContainer,
+        1.3,
         {
-          ease: "elastic.out(1, 0.4)",
-          css: {
-            left: e.pageX,
-            top: e.pageY - 200,
-            scaleY: 0,
-            scaleX: 0,
-            visibility: "hidden"
-          }
+          top: e.pageY - 200,
+          left: e.pageX - 25,
+          scale: 0,
+          visibility: "hidden"
         },
         {
-          ease: "elastic.out(1, 0.4)",
-          css: {
-            left: e.pageX,
-            top: e.pageY,
-            scaleY: 1,
-            scaleX: 1,
-            visibility: "visible"
+          ease: "elastic.inOut(1, 0.75)",
+          top: e.pageY,
+          left: e.pageX - 25,
+          scale: 1,
+          visibility: "visible",
+          onComplete: () => {
+            vue.isBaiting = true;
           }
-        }
-      );
+        },
+        0
+      )
+        .fromTo(
+          this.wave,
+          2,
+          {
+            width: "0px",
+            height: "0px",
+            opacity: 0.5
+          },
+          {
+            y: "-=3px",
+            ease: "Linear.easeNone",
+            width: "50px",
+            height: "10px",
+            visibility: "visible",
+            repeat: 2,
+            opacity: 0
+          },
+          1
+        )
+        .to(
+          this.pond,
+          1,
+          {
+            opacity: 0,
+            ease: "power4.out"
+          },
+          1
+        );
 
-      this.float(this.bait);
+      this.floatBait();
+    },
+
+    floatBait() {
+      this.resetElements();
+
+      let vue = this;
+      this.gsap.to(this.baitContainer, 1, {
+        y: "-=3px",
+        ease: "Linear.easeNone",
+        yoyo: true,
+        repeat: 6,
+        onComplete: () => vue.catchFish()
+      });
+    },
+
+    catchFish() {
+      let tl = gsap.timeline();
+      let vue = this;
+      tl.to(
+        this.baitContainer,
+        0.5,
+        {
+          ease: "power4.out",
+          y: "+=10"
+        },
+        0
+      )
+        .to(
+          this.baitContainer,
+          0.3,
+          {
+            ease: "power4.in",
+            y: "-=100",
+            opacity: 0
+          },
+          0.3
+        )
+        .to(
+          this.pond,
+          1,
+          {
+            opacity: 1,
+            ease: "power4.in"
+          },
+          1
+        )
+        .then(x => {
+          vue.isBaiting = false;
+        });
     },
 
     mouseout() {
-      gsap.to(this.indicator, 0.1, { scale: 0, autoAlpha: 1 });
+      this.gsap.to(this.indicator, 0.1, { scale: 0, autoAlpha: 1 });
     },
 
     mouseover() {
-      gsap.to(this.indicator, 0.15, { scale: 1, autoAlpha: 1 });
+      this.gsap.to(this.indicator, 0.15, { scale: 1, autoAlpha: 1 });
     },
 
     mousemove(e) {
-      gsap.to(this.indicator, 0.2, {
+      this.gsap.to(this.indicator, 0.2, {
         css: {
           left: e.pageX + this.indicator.clientWidth / 2,
           top: e.pageY + this.indicator.clientHeight / 2
         }
       });
-    },
-
-    float(element) {
-      gsap.set(element, { clearProps: "all" });
-
-      this.randomX = this.random(5, 10);
-      this.randomY = this.random(10, 15);
-      this.randomTime = this.random(1, 3);
-      this.randomTime2 = this.random(1, 3);
-      this.randomAngle = this.random(4, 6);
-
-      gsap.set(element, {
-        x: this.randomX(-1),
-        y: this.randomX(1),
-        rotation: this.randomAngle(-1)
-      });
-
-      this.moveX(element, 1);
-      this.moveY(element, -1);
-      this.rotate(element, 1);
-    },
-
-    rotate(target, direction) {
-      gsap.to(target, this.randomTime2(), {
-        rotation: this.randomAngle(direction),
-        ease: "Sine.easeInOut",
-        onComplete: this.rotate,
-        onCompleteParams: [target, direction * -1]
-      });
-    },
-
-    moveX(target, direction) {
-      gsap.to(target, this.randomTime(), {
-        x: this.randomX(direction),
-        ease: "Sine.easeInOut",
-        onComplete: this.moveX,
-        onCompleteParams: [target, direction * -1]
-      });
-    },
-
-    moveY(target, direction) {
-      gsap.to(target, this.randomTime(), {
-        y: this.randomY(direction),
-        ease: "Sine.easeInOut",
-        onComplete: this.moveY,
-        onCompleteParams: [target, direction * -1]
-      });
-    },
-
-    random(min, max) {
-      const delta = max - min;
-      return (direction = 1) => (min + delta * Math.random()) * direction;
     }
   }
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import "../assets/keyframes";
 
 $hookWidth: 100px;
@@ -167,28 +205,52 @@ $hookHeight: 50px;
     color: white;
   }
 
-  .bait {
+  .bait-container {
     position: absolute;
     z-index: 3;
-    max-width: 20px;
+    width: 50px;
+    text-align: center;
     visibility: hidden;
+    // border: 1px solid white;
+
+    .bait {
+      z-index: 3;
+      max-width: 20px;
+      // visibility: hidden;
+    }
+
+    .wave {
+      z-index: 3;
+      height: 5px;
+      width: 10px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      border-top: 0.5px;
+      background: rgba(0, 0, 0, 0);
+      margin: 0 auto;
+      margin-top: -7px;
+      visibility: hidden;
+      // animation: wave 2s ease-out infinite;
+    }
   }
 
   .game-content {
+    position: relative;
     height: 500px;
     width: 800px;
     background: #0e3741;
     display: flex;
     justify-content: center;
-    position: relative;
+    background-size: cover;
 
     .pond {
       position: absolute;
-      height: 250px;
+      height: 200px;
       width: 700px;
       background-color: rgba(0, 0, 0, 0);
       border-radius: 50%;
       bottom: 20px;
+      transition: animation 1s;
       animation: neon 1.5s ease-in-out infinite alternate;
       // cursor: none;
     }
