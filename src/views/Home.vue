@@ -8,22 +8,23 @@
     </div>
 
     <div class="game-content">
-      <div class="winning-effect" id="winning-effect">
+      <div class="winning-effect" :class="points === 0 ? 'lose' : 'win'" id="winning-effect">
         <img
-          src="@/assets/fishes/fish1.png"
+          :src="require(`@/assets/fishes/fish${points}.png`)"
           class="winning-effect__fish"
           id="winning-effect__fish"
           alt
         />
         <br />
         <span class="winning-effect__text" id="winning-effect__text">
-          <h1 class="stroke-inner" id="stroke-inner">{{ points }} P0ints</h1>
-          <h1 class="stroke-outer" id="stroke-outer">{{ points }} P0ints</h1>
-          <h1 class="no-stroke" id="no-stroke">{{ points }} P0ints</h1>
+          <h1 class="stroke-inner" id="stroke-inner">{{ points * 100 }} P0ints</h1>
+          <h1 class="stroke-outer" id="stroke-outer">{{ points * 100 }} P0ints</h1>
+          <h1 class="no-stroke" id="no-stroke">{{ points * 100 }} P0ints</h1>
         </span>
       </div>
 
       <img src="@/assets/Fishing-02.jpg" class="game-content__bg" alt />
+      <!-- <div class="pond" id="pond" @mouseover="setIndicator(1)" @mouseout="setIndicator(0)" /> -->
       <div
         class="pond"
         id="pond"
@@ -128,6 +129,10 @@ export default {
     startBait(e) {
       if (this.isBaiting) return;
 
+      this.points = Math.floor(Math.random() * 5);
+      this.setWinningEffect(this.points);
+      console.log(this.points);
+
       let tl = gsap.timeline();
 
       this.isBaiting = true;
@@ -174,24 +179,25 @@ export default {
       return tl;
     },
 
-    setWinningTextColor(points) {
+    setWinningEffect() {
       let strokeInner = document.getElementById("stroke-inner");
       let strokeOuter = document.getElementById("stroke-outer");
       let stroke = document.getElementById("no-stroke");
 
       const tl = gsap.timeline();
+      const isWin = this.points > 0;
 
       tl.set(strokeOuter, {
         "-webkit-text-stroke": "12px #f2ece8"
-      })
-        .set(strokeInner, {
-          "-webkit-text-stroke": `10px #${points === 0 ? "7c1b1a" : "15488d"}`,
-          zIndex: 1
-        })
-        .set(stroke, {
-          color: points === 0 ? "#f83534" : "#71cede",
-          zIndex: 2
-        });
+      });
+      tl.set(strokeInner, {
+        "-webkit-text-stroke": `10px #${isWin ? "15488d" : "7c1b1a"}`,
+        zIndex: 1
+      });
+      tl.set(stroke, {
+        color: `#${isWin ? "71cede" : "f83534"}`,
+        zIndex: 2
+      });
     },
 
     catchFish() {
@@ -207,8 +213,6 @@ export default {
     },
 
     showFish() {
-      this.points = Math.floor(Math.random() * 5);
-      this.setWinningTextColor(this.points);
       let effect = document.getElementById("winning-effect");
 
       this.gsap.fromTo(
@@ -310,8 +314,6 @@ $hookHeight: 50px;
 
     .winning-effect {
       position: absolute;
-      width: 100%;
-      height: 100%;
       z-index: 1;
       top: 50%;
       left: 50%;
@@ -320,12 +322,38 @@ $hookHeight: 50px;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background-image: url("../assets/doubleGlow.png");
-      background-size: contain;
+      border-radius: 50%;
+      border: none;
+      // win
+      // width: 100%;
+      // height: 100%;
+      // background-image: url("../assets/doubleGlow.png");
+      // background-size: cover;
+      // end win
+
+      // lose
+
+      // lose end
       background-repeat: no-repeat;
-      background-position: center;
+      background-position: bottom;
       visibility: hidden;
       opacity: 0;
+
+      &.lose {
+        width: 40%;
+        height: 40%;
+        background-image: url("../assets/0_light.png");
+        background-size: 50% 50%;
+        background-color: rgba(248, 53, 52, 0.4);
+        box-shadow: -1px 2px 70px 116px rgba(248, 53, 52, 0.4);
+      }
+
+      &.win {
+        width: 100%;
+        height: 100%;
+        background-image: url("../assets/doubleGlow.png");
+        background-size: cover;
+      }
 
       .winning-effect__fish {
       }
@@ -354,7 +382,7 @@ $hookHeight: 50px;
 
     .pond {
       position: absolute;
-      height: 150px;
+      height: 130px;
       width: 700px;
       background-color: rgba(0, 0, 0, 0);
       border-radius: 50%;
