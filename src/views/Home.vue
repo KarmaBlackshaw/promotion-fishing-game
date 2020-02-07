@@ -1,6 +1,10 @@
 <template>
   <div class="game" @mousemove="mousemove">
-    <div class="indicator" id="indicator" v-text="isBaiting ? '' : 'CLICK TO CAST'"></div>
+    <div class="indicator" id="indicator">
+      <img src="@/assets/cast.png" class="indicator__text" alt />
+      <img src="@/assets/arrow.png" class="indicator__arrow" id="indicator__arrow" alt />
+      <img src="@/assets/target.png" class="indicator__target" alt />
+    </div>
 
     <div class="bait-container" id="bait-container">
       <img class="bait" id="bait" src="@/assets/lure.png" alt />
@@ -24,7 +28,6 @@
       </div>
 
       <img src="@/assets/Fishing-02.jpg" class="game-content__bg" alt />
-      <!-- <div class="pond" id="pond" @mouseover="setIndicator(1)" @mouseout="setIndicator(0)" /> -->
       <div
         class="pond"
         id="pond"
@@ -45,6 +48,7 @@ export default {
     gsap: null,
     pond: null,
     isBaiting: false,
+
     timeline: null,
     points: 0
   }),
@@ -131,7 +135,6 @@ export default {
 
       this.points = Math.floor(Math.random() * 5);
       this.setWinningEffect(this.points);
-      console.log(this.points);
 
       let tl = gsap.timeline();
 
@@ -233,7 +236,19 @@ export default {
     },
 
     setIndicator(scale) {
-      this.gsap.to(this.indicator, 0.15, { scale, autoAlpha: 1 });
+      const arrow = document.getElementById("indicator__arrow");
+      const tl = gsap.timeline();
+
+      tl.to(this.indicator, 0.15, {
+        scale: this.isBaiting ? 0 : scale,
+        autoAlpha: 1
+      });
+      tl.to(arrow, 0.5, {
+        y: "+=5px",
+        yoyo: true,
+        ease: "power4.in",
+        repeat: -1
+      });
     },
 
     mousemove(e) {
@@ -265,7 +280,6 @@ $hookHeight: 50px;
     top: 50%;
     left: 50%;
     margin: (-$hookHeight) 0 0 (-$hookWidth);
-    border-radius: 80%;
     backface-visibility: hidden;
     z-index: 5;
     pointer-events: none;
@@ -274,6 +288,23 @@ $hookHeight: 50px;
     font-size: 1rem;
     font-weight: bold;
     color: white;
+
+    .indicator__text {
+      display: block;
+      margin: 0 auto;
+      margin-bottom: 5px;
+      margin-top: -20px;
+    }
+
+    .indicator__arrow {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .indicator__target {
+      display: block;
+      margin: 0 auto;
+    }
   }
 
   .bait-container {
@@ -324,16 +355,6 @@ $hookHeight: 50px;
       justify-content: center;
       border-radius: 50%;
       border: none;
-      // win
-      // width: 100%;
-      // height: 100%;
-      // background-image: url("../assets/doubleGlow.png");
-      // background-size: cover;
-      // end win
-
-      // lose
-
-      // lose end
       background-repeat: no-repeat;
       background-position: bottom;
       visibility: hidden;
