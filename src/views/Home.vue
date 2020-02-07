@@ -6,7 +6,24 @@
       <img class="bait" id="bait" src="@/assets/lure.png" alt />
       <div class="wave" id="wave" />
     </div>
+
     <div class="game-content">
+      <div class="winning-effect" id="winning-effect">
+        <img
+          src="@/assets/fishes/fish1.png"
+          class="winning-effect__fish"
+          id="winning-effect__fish"
+          alt
+        />
+        <br />
+        <span class="winning-effect__text" id="winning-effect__text">
+          <h1 class="stroke-inner" id="stroke-inner">{{ points }} P0ints</h1>
+          <h1 class="stroke-outer" id="stroke-outer">{{ points }} P0ints</h1>
+          <h1 class="no-stroke" id="no-stroke">{{ points }} P0ints</h1>
+        </span>
+      </div>
+
+      <img src="@/assets/Fishing-02.jpg" class="game-content__bg" alt />
       <div
         class="pond"
         id="pond"
@@ -23,12 +40,12 @@ import { gsap } from "gsap";
 export default {
   data: () => ({
     indicator: null,
-    bait: null,
     baitContainer: null,
     gsap: null,
     pond: null,
     isBaiting: false,
-    timeline: null
+    timeline: null,
+    points: 0
   }),
 
   mounted() {
@@ -49,7 +66,6 @@ export default {
   methods: {
     initElements() {
       this.indicator = document.getElementById("indicator");
-      this.bait = document.getElementById("bait");
       this.pond = document.getElementById("pond");
       this.wave = document.getElementById("wave");
       this.baitContainer = document.getElementById("bait-container");
@@ -127,7 +143,7 @@ export default {
 
       let vue = this;
       this.gsap.to(this.baitContainer, 1, {
-        y: "-=3px",
+        y: `-=3px`,
         ease: "Linear.easeNone",
         yoyo: true,
         repeat: 6,
@@ -158,6 +174,26 @@ export default {
       return tl;
     },
 
+    setWinningTextColor(points) {
+      let strokeInner = document.getElementById("stroke-inner");
+      let strokeOuter = document.getElementById("stroke-outer");
+      let stroke = document.getElementById("no-stroke");
+
+      const tl = gsap.timeline();
+
+      tl.set(strokeOuter, {
+        "-webkit-text-stroke": "12px #f2ece8"
+      })
+        .set(strokeInner, {
+          "-webkit-text-stroke": `10px #${points === 0 ? "7c1b1a" : "15488d"}`,
+          zIndex: 1
+        })
+        .set(stroke, {
+          color: points === 0 ? "#f83534" : "#71cede",
+          zIndex: 2
+        });
+    },
+
     catchFish() {
       let tl = gsap.timeline();
       let vue = this;
@@ -165,9 +201,31 @@ export default {
       tl.add(this.biteLure(), 0);
       tl.add(this.getLure(), 0.3);
       tl.then(x => {
-        vue.isBaiting = false;
+        vue.showFish();
         vue.resetElements();
       });
+    },
+
+    showFish() {
+      this.points = Math.floor(Math.random() * 5);
+      this.setWinningTextColor(this.points);
+      let effect = document.getElementById("winning-effect");
+
+      this.gsap.fromTo(
+        effect,
+        2,
+        {
+          scale: 0,
+          opacity: 0,
+          visibility: "hidden"
+        },
+        {
+          scale: 0.8,
+          opacity: 1,
+          ease: "elastic.out(1, 0.4)",
+          visibility: "visible"
+        }
+      );
     },
 
     setIndicator(scale) {
@@ -186,6 +244,7 @@ export default {
 
 <style lang="scss" scoped>
 @import "../assets/keyframes";
+@import "../assets/fonts";
 
 $hookWidth: 100px;
 $hookHeight: 50px;
@@ -219,12 +278,10 @@ $hookHeight: 50px;
     width: 50px;
     text-align: center;
     visibility: hidden;
-    // border: 1px solid white;
 
     .bait {
       z-index: 3;
       max-width: 20px;
-      // visibility: hidden;
     }
 
     .wave {
@@ -232,13 +289,13 @@ $hookHeight: 50px;
       height: 5px;
       width: 10px;
       border-radius: 50%;
-      border: 2px solid #fff;
+      border: 5px solid #fff;
+      border-bottom: 2px;
       border-top: 0.5px;
       background: rgba(0, 0, 0, 0);
       margin: 0 auto;
       margin-top: -7px;
       visibility: hidden;
-      // animation: wave 2s ease-out infinite;
     }
   }
 
@@ -251,13 +308,57 @@ $hookHeight: 50px;
     justify-content: center;
     background-size: cover;
 
+    .winning-effect {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-image: url("../assets/doubleGlow.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      visibility: hidden;
+      opacity: 0;
+
+      .winning-effect__fish {
+      }
+
+      .winning-effect__text {
+        font-family: "LuckiestGuy";
+        position: relative;
+        width: 100%;
+        font-size: 1.5rem;
+
+        h1 {
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          padding: 0;
+          margin: 0;
+        }
+      }
+    }
+
+    .game-content__bg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
     .pond {
       position: absolute;
-      height: 200px;
+      height: 150px;
       width: 700px;
       background-color: rgba(0, 0, 0, 0);
       border-radius: 50%;
-      bottom: 20px;
+      bottom: 100px;
       transition: animation 1s;
       animation: neon 1.5s ease-in-out infinite alternate;
       // cursor: none;
