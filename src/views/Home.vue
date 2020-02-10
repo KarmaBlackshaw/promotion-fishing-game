@@ -12,7 +12,7 @@
     </div>
 
     <div class="game-content">
-      <div class="title-holder">
+      <div class="game-content__title-container">
         <img src="@/assets/title-1.png" id="title-1" class="title-1" alt />
         <img src="@/assets/title-2.png" id="title-2" class="title-2" alt />
       </div>
@@ -86,16 +86,21 @@ export default {
     isBaiting: false,
 
     timeline: null,
-    points: 1
+    points: 0,
+
+    config: {
+      floatDuration: 0.75,
+      floatHeight: "-=3px",
+      biteLureDepth: "+=10",
+      biteLureDuration: 0.5,
+      resultBackgroundBrightness: 80
+    }
   }),
 
   mounted() {
     this.gsap = gsap;
     this.masterTimeline = gsap.timeline;
     this.initElements();
-    this.startBait__switchTitle();
-    this.setWinningEffect();
-    this.showFish();
   },
 
   watch: {
@@ -166,24 +171,15 @@ export default {
     startBait__animateWave() {
       const tl = gsap.timeline();
 
-      tl.fromTo(
-        this.wave,
-        2,
-        {
-          width: "0px",
-          height: "0px",
-          opacity: 0.5
-        },
-        {
-          y: "-=3px",
-          ease: "Linear.easeNone",
-          width: "50px",
-          height: "10px",
-          visibility: "visible",
-          repeat: 2,
-          opacity: 0
-        }
-      );
+      tl.to(this.wave, this.config.floatDuration * 2, {
+        y: "-=3px",
+        ease: "Linear.easeNone",
+        width: "50px",
+        height: "10px",
+        visibility: "visible",
+        repeat: 2,
+        opacity: 0
+      });
       return tl;
     },
 
@@ -195,9 +191,7 @@ export default {
         1.3,
         {
           top: e.pageY - 200,
-          left: e.pageX - 25,
-          scale: 0,
-          visibility: "hidden"
+          left: e.pageX - 25
         },
         {
           ease: "elastic.inOut(1, 0.75)",
@@ -216,10 +210,9 @@ export default {
 
       tl.to(
         this.titleTwo,
-        2,
+        1,
         {
           opacity: 0,
-          visibility: "hidden",
           ease: "power4.out"
         },
         0
@@ -228,6 +221,7 @@ export default {
         2,
         {
           opacity: 1,
+          ease: "power4.in",
           visibility: "visible"
         },
         0
@@ -257,8 +251,8 @@ export default {
       this.resetElements();
 
       let vue = this;
-      this.gsap.to(this.baitContainer, 1, {
-        y: `-=3px`,
+      this.gsap.to(this.baitContainer, this.config.floatDuration, {
+        y: this.config.floatHeight,
         ease: "Linear.easeNone",
         yoyo: true,
         repeat: 6,
@@ -269,9 +263,9 @@ export default {
     catchFish__biteLure() {
       const tl = gsap.timeline();
 
-      tl.to(this.baitContainer, 0.5, {
+      tl.to(this.baitContainer, this.config.biteLureDuration, {
         ease: "power4.out",
-        y: "+=10"
+        y: this.config.biteLureDepth
       });
 
       return tl;
@@ -296,12 +290,12 @@ export default {
       tl.add(this.catchFish__biteLure(), 0);
       tl.add(this.catchFish__getLure(), 0.3);
       tl.then(x => {
-        vue.showFish();
+        vue.showResult();
         vue.resetElements();
       });
     },
 
-    showFish__darkenBackground() {
+    showResult__darkenBackground() {
       const tl = gsap.timeline();
       const background = document.getElementById("game-content__bg");
 
@@ -312,8 +306,7 @@ export default {
           filter: "brightness(100%)"
         },
         {
-          filter: "brightness(80%)",
-
+          filter: `brightness(${this.config.resultBackgroundBrightness}%)`,
           ease: "linear.easeNone"
         }
       );
@@ -321,7 +314,7 @@ export default {
       return tl;
     },
 
-    showFish__setEffectVisibility() {
+    showResult__setEffectVisibility() {
       const tl = gsap.timeline();
       const effect = document.getElementById("winning-effect");
 
@@ -339,7 +332,7 @@ export default {
       return tl;
     },
 
-    showFish__showFish() {
+    showResult__showFish() {
       const tl = gsap.timeline();
       const winningFish = document.getElementById("winning-effect__fish");
 
@@ -362,7 +355,7 @@ export default {
       return tl;
     },
 
-    showFish__showText() {
+    showResult__showText() {
       const tl = gsap.timeline();
       const winningText = document.getElementById("winning-effect__text");
 
@@ -385,7 +378,7 @@ export default {
       return tl;
     },
 
-    showFish__rotateGlows() {
+    showResult__rotateGlows() {
       const tl = gsap.timeline();
       const verticalGlow = document.getElementById("glow--vertical");
       const circularGlow = document.getElementById("glow--circular");
@@ -401,13 +394,13 @@ export default {
         verticalGlow,
         2,
         {
-          ease: "power4.inOut",
           opacity: 0
         },
         {
           opacity: 1,
           visibility: "visible",
-          rotate: 540
+          rotate: 540,
+          ease: "power4.out"
         },
         0
       );
@@ -422,7 +415,8 @@ export default {
         {
           opacity: 1,
           visibility: "visible",
-          rotate: -180
+          rotate: -180,
+          ease: "power4.out"
         },
         0
       );
@@ -430,15 +424,31 @@ export default {
       return tl;
     },
 
-    showFish__showLoseGlow() {
+    showResult__showLoseGlow() {
       const tl = gsap.timeline();
       const effect = document.getElementById("winning-effect");
+      const glow = document.getElementById("glow--lose");
 
       tl.set(effect, {
         width: "40%",
         height: "40%",
         backgroundSize: "50% 50%"
       });
+
+      tl.fromTo(
+        glow,
+        2,
+        {
+          opacity: 0.7,
+          width: "50&"
+        },
+        {
+          opacity: 1,
+          width: "100%",
+          yoyo: true
+        },
+        0
+      );
 
       tl.fromTo(
         effect,
@@ -450,23 +460,24 @@ export default {
         {
           backgroundColor: "rgba(248, 53, 52, 0.4)",
           boxShadow: "-1px 2px 70px 116px rgba(248, 53, 52, 0.4)"
-        }
+        },
+        0
       );
 
       return tl;
     },
 
-    showFish() {
-      const tl = gsap.timeline({ repeat: -1 });
+    showResult() {
+      const tl = gsap.timeline();
 
-      tl.add(this.showFish__darkenBackground(), 0.1);
-      tl.add(this.showFish__showFish(), 0.1);
-      tl.add(this.showFish__setEffectVisibility(), 0.3);
-      tl.add(this.showFish__showText(), 0.5);
+      tl.add(this.showResult__darkenBackground(), 0.1);
+      tl.add(this.showResult__showFish(), 0.1);
+      tl.add(this.showResult__setEffectVisibility(), 0.3);
+      tl.add(this.showResult__showText(), 0.5);
       tl.add(
         this.points === 0
-          ? this.showFish__showLoseGlow()
-          : this.showFish__rotateGlows(),
+          ? this.showResult__showLoseGlow()
+          : this.showResult__rotateGlows(),
         0.5
       );
     },
@@ -570,6 +581,7 @@ $hookHeight: 50px;
     width: 50px;
     text-align: center;
     visibility: hidden;
+    transform: scale(0);
 
     .bait {
       z-index: 3;
@@ -578,8 +590,9 @@ $hookHeight: 50px;
 
     .wave {
       z-index: 3;
-      height: 5px;
-      width: 10px;
+      height: 0;
+      width: 0;
+      opacity: 1;
       border-radius: 50%;
       border: 5px solid #fff;
       border-bottom: 2px;
@@ -600,7 +613,7 @@ $hookHeight: 50px;
     justify-content: center;
     background-size: cover;
 
-    .title-holder {
+    .game-content__title-container {
       position: absolute;
       width: 100%;
       height: 100%;

@@ -1,0 +1,182 @@
+$hookWidth: 100px;
+$hookHeight: 50px;
+
+.game {
+  display: flex;
+  justify-content: center;
+  user-select: none;
+
+  .indicator {
+    position: absolute;
+    width: $hookWidth;
+    height: $hookHeight;
+    top: 50%;
+    left: 50%;
+    margin: (-$hookHeight) 0 0 (-$hookWidth);
+    backface-visibility: hidden;
+    z-index: 5;
+    pointer-events: none;
+    animation: floating 0.7s ease-in-out infinite alternate;
+    visibility: hidden;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+
+    .indicator__text {
+      display: block;
+      margin: 0 auto;
+      margin-bottom: 5px;
+      margin-top: -20px;
+    }
+
+    .indicator__arrow {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .indicator__target {
+      display: block;
+      margin: 0 auto;
+    }
+  }
+
+  .bait-container {
+    position: absolute;
+    z-index: 3;
+    width: 50px;
+    text-align: center;
+    visibility: hidden;
+    transform: scale(0);
+
+    .bait {
+      z-index: 3;
+      max-width: 20px;
+    }
+
+    .wave {
+      z-index: 3;
+      height: 0;
+      width: 0;
+      opacity: 1;
+      border-radius: 50%;
+      border: 5px solid #fff;
+      border-bottom: 2px;
+      border-top: 0.5px;
+      background: rgba(0, 0, 0, 0);
+      margin: 0 auto;
+      margin-top: -7px;
+      visibility: hidden;
+    }
+  }
+
+  .game-content {
+    position: relative;
+    height: 500px;
+    width: 800px;
+    background: #0e3741;
+    display: flex;
+    justify-content: center;
+    background-size: cover;
+
+    .game-content__title-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+
+      .title-1 {
+        position: relative;
+        margin-left: 10px;
+        margin-top: 10px;
+        display: block;
+        visibility: hidden;
+      }
+
+      .title-2 {
+        position: relative;
+        display: block;
+        margin: 0 auto;
+      }
+    }
+
+    .winning-effect {
+      position: absolute;
+      z-index: 1;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: none;
+      background-repeat: no-repeat;
+      background-position: bottom;
+      visibility: hidden;
+
+      .winning-effect__glow {
+        position: absolute;
+      }
+
+      .winning-effect__fish {
+        z-index: 1;
+        visibility: hidden;
+        opacity: 0;
+        transform: scale(0);
+      }
+
+      .winning-effect__text {
+        font-family: "LuckiestGuy";
+        position: relative;
+        width: 100%;
+        font-size: 1.5rem;
+        font-weight: 900;
+        visibility: hidden;
+        opacity: 0;
+        transform: scale(0);
+
+        h1 {
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          padding: 0;
+          margin: 0;
+        }
+
+        .stroke-inner {
+          position: absolute;
+          -webkit-text-stroke: 10px #15488d;
+          z-index: 1;
+        }
+        .stroke-outer {
+          position: absolute;
+          -webkit-text-stroke: 13px #fff;
+        }
+
+        .no-stroke {
+          color: #71cede;
+          position: absolute;
+          z-index: 2;
+        }
+      }
+    }
+
+    .game-content__bg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .pond {
+      position: absolute;
+      height: 130px;
+      width: 700px;
+      background-color: rgba(0, 0, 0, 0);
+      border-radius: 50%;
+      bottom: 100px;
+      transition: animation 1s;
+      animation: neon 1.5s ease-in-out infinite alternate;
+      // cursor: none;
+    }
+  }
+}
