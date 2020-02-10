@@ -12,7 +12,35 @@
     </div>
 
     <div class="game-content">
-      <div class="winning-effect" :class="points === 0 ? 'lose' : 'win'" id="winning-effect">
+      <div class="title-holder">
+        <img src="@/assets/title-1.png" id="title-1" class="title-1" alt />
+        <img src="@/assets/title-2.png" id="title-2" class="title-2" alt />
+      </div>
+
+      <img src="@/assets/Fishing-02.jpg" class="game-content__bg" id="game-content__bg" alt />
+
+      <div class="winning-effect" id="winning-effect">
+        <img
+          src="@/assets/0_light.png"
+          v-if="points === 0"
+          class="winning-effect__glow"
+          id="glow--lose"
+          alt
+        />
+        <img
+          src="@/assets/glow1.png"
+          v-if="points > 0"
+          class="winning-effect__glow"
+          id="glow--vertical"
+          alt
+        />
+        <img
+          src="@/assets/glow2.png"
+          v-if="points > 0"
+          class="winning-effect__glow"
+          id="glow--circular"
+          alt
+        />
         <img
           :src="require(`@/assets/fishes/fish${points}.png`)"
           class="winning-effect__fish"
@@ -27,7 +55,12 @@
         </span>
       </div>
 
-      <img src="@/assets/Fishing-02.jpg" class="game-content__bg" alt />
+      <!-- <div
+        class="pond"
+        id="pond"
+        @mouseover="setIndicator(1)"
+        @mouseout="setIndicator(0)"
+      />-->
       <div
         class="pond"
         id="pond"
@@ -47,16 +80,22 @@ export default {
     baitContainer: null,
     gsap: null,
     pond: null,
+    titleOne: null,
+    titleTwo: null,
+
     isBaiting: false,
 
     timeline: null,
-    points: 0
+    points: 1
   }),
 
   mounted() {
     this.gsap = gsap;
     this.masterTimeline = gsap.timeline;
     this.initElements();
+    this.startBait__switchTitle();
+    this.setWinningEffect();
+    this.showFish();
   },
 
   watch: {
@@ -64,6 +103,10 @@ export default {
       this.gsap.to(this.pond, 1, {
         opacity: val ? 0 : 1,
         ease: val ? "power4.out" : "power4.in"
+      });
+      this.gsap.to(this.indicator, 0.15, {
+        scale: val ? 0 : 1,
+        autoAlpha: 1
       });
     }
   },
@@ -73,6 +116,8 @@ export default {
       this.indicator = document.getElementById("indicator");
       this.pond = document.getElementById("pond");
       this.wave = document.getElementById("wave");
+      this.titleOne = document.getElementById("title-1");
+      this.titleTwo = document.getElementById("title-2");
       this.baitContainer = document.getElementById("bait-container");
     },
 
@@ -82,7 +127,43 @@ export default {
       });
     },
 
-    animateWave() {
+    setWinningEffect() {
+      const strokeInner = document.getElementById("stroke-inner");
+      const strokeOuter = document.getElementById("stroke-outer");
+      const stroke = document.getElementById("no-stroke");
+      const effect = document.getElementById("winning-effect");
+
+      const tl = gsap.timeline();
+      const isWin = this.points > 0;
+
+      tl.set(strokeOuter, {
+        "-webkit-text-stroke": "12px #f2ece8"
+      });
+      tl.set(strokeInner, {
+        "-webkit-text-stroke": `10px #${isWin ? "15488d" : "7c1b1a"}`,
+        zIndex: 1
+      });
+      tl.set(stroke, {
+        color: `#${isWin ? "71cede" : "f83534"}`,
+        zIndex: 2
+      });
+
+      if (isWin) {
+        tl.set(effect, {
+          width: "40%",
+          height: "40%",
+          backgroundSize: "50% 50%"
+        });
+      } else {
+        tl.set(effect, {
+          width: "100%",
+          height: "100%",
+          backgroundSize: "cover"
+        });
+      }
+    },
+
+    startBait__animateWave() {
       const tl = gsap.timeline();
 
       tl.fromTo(
@@ -106,7 +187,7 @@ export default {
       return tl;
     },
 
-    throwLure(e) {
+    startBait__throwLure(e) {
       const tl = gsap.timeline();
 
       tl.fromTo(
@@ -130,6 +211,31 @@ export default {
       return tl;
     },
 
+    startBait__switchTitle() {
+      const tl = gsap.timeline();
+
+      tl.to(
+        this.titleTwo,
+        2,
+        {
+          opacity: 0,
+          visibility: "hidden",
+          ease: "power4.out"
+        },
+        0
+      ).to(
+        this.titleOne,
+        2,
+        {
+          opacity: 1,
+          visibility: "visible"
+        },
+        0
+      );
+
+      return tl;
+    },
+
     startBait(e) {
       if (this.isBaiting) return;
 
@@ -140,8 +246,9 @@ export default {
 
       this.isBaiting = true;
 
-      tl.add(this.throwLure(e));
-      tl.add(this.animateWave(), 1);
+      tl.add(this.startBait__switchTitle(), 0);
+      tl.add(this.startBait__throwLure(e), 0);
+      tl.add(this.startBait__animateWave(), 1);
 
       this.floatLure();
     },
@@ -159,7 +266,7 @@ export default {
       });
     },
 
-    biteLure() {
+    catchFish__biteLure() {
       const tl = gsap.timeline();
 
       tl.to(this.baitContainer, 0.5, {
@@ -170,7 +277,7 @@ export default {
       return tl;
     },
 
-    getLure() {
+    catchFish__getLure() {
       const tl = gsap.timeline();
 
       tl.to(this.baitContainer, 0.3, {
@@ -182,44 +289,193 @@ export default {
       return tl;
     },
 
-    setWinningEffect() {
-      let strokeInner = document.getElementById("stroke-inner");
-      let strokeOuter = document.getElementById("stroke-outer");
-      let stroke = document.getElementById("no-stroke");
-
-      const tl = gsap.timeline();
-      const isWin = this.points > 0;
-
-      tl.set(strokeOuter, {
-        "-webkit-text-stroke": "12px #f2ece8"
-      });
-      tl.set(strokeInner, {
-        "-webkit-text-stroke": `10px #${isWin ? "15488d" : "7c1b1a"}`,
-        zIndex: 1
-      });
-      tl.set(stroke, {
-        color: `#${isWin ? "71cede" : "f83534"}`,
-        zIndex: 2
-      });
-    },
-
     catchFish() {
       let tl = gsap.timeline();
       let vue = this;
 
-      tl.add(this.biteLure(), 0);
-      tl.add(this.getLure(), 0.3);
+      tl.add(this.catchFish__biteLure(), 0);
+      tl.add(this.catchFish__getLure(), 0.3);
       tl.then(x => {
         vue.showFish();
         vue.resetElements();
       });
     },
 
-    showFish() {
-      let effect = document.getElementById("winning-effect");
+    showFish__darkenBackground() {
+      const tl = gsap.timeline();
+      const background = document.getElementById("game-content__bg");
 
-      this.gsap.fromTo(
+      tl.fromTo(
+        background,
+        0.5,
+        {
+          filter: "brightness(100%)"
+        },
+        {
+          filter: "brightness(80%)",
+
+          ease: "linear.easeNone"
+        }
+      );
+
+      return tl;
+    },
+
+    showFish__setEffectVisibility() {
+      const tl = gsap.timeline();
+      const effect = document.getElementById("winning-effect");
+
+      tl.fromTo(
         effect,
+        1,
+        {
+          visibility: "hidden"
+        },
+        {
+          visibility: "visible"
+        }
+      );
+
+      return tl;
+    },
+
+    showFish__showFish() {
+      const tl = gsap.timeline();
+      const winningFish = document.getElementById("winning-effect__fish");
+
+      tl.fromTo(
+        winningFish,
+        1,
+        {
+          scale: 0,
+          opacity: 0,
+          visibility: "hidden"
+        },
+        {
+          scale: 1,
+          opacity: 1,
+          visibility: "visible",
+          ease: "elastic.out(1, 0.5)"
+        }
+      );
+
+      return tl;
+    },
+
+    showFish__showText() {
+      const tl = gsap.timeline();
+      const winningText = document.getElementById("winning-effect__text");
+
+      tl.fromTo(
+        winningText,
+        1,
+        {
+          scale: 0,
+          opacity: 0,
+          visibility: "hidden"
+        },
+        {
+          scale: 1,
+          opacity: 1,
+          visibility: "visible",
+          ease: "elastic.out(1, 0.5)"
+        }
+      );
+
+      return tl;
+    },
+
+    showFish__rotateGlows() {
+      const tl = gsap.timeline();
+      const verticalGlow = document.getElementById("glow--vertical");
+      const circularGlow = document.getElementById("glow--circular");
+      const effect = document.getElementById("winning-effect");
+
+      tl.set(effect, {
+        width: "100%",
+        height: "100%",
+        backgroundSize: "cover"
+      });
+
+      tl.fromTo(
+        verticalGlow,
+        2,
+        {
+          ease: "power4.inOut",
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          visibility: "visible",
+          rotate: 540
+        },
+        0
+      );
+
+      tl.fromTo(
+        circularGlow,
+        2,
+        {
+          ease: "power4.in",
+          opacity: 0
+        },
+        {
+          opacity: 1,
+          visibility: "visible",
+          rotate: -180
+        },
+        0
+      );
+
+      return tl;
+    },
+
+    showFish__showLoseGlow() {
+      const tl = gsap.timeline();
+      const effect = document.getElementById("winning-effect");
+
+      tl.set(effect, {
+        width: "40%",
+        height: "40%",
+        backgroundSize: "50% 50%"
+      });
+
+      tl.fromTo(
+        effect,
+        0.5,
+        {
+          backgroundColor: "rgba(248, 53, 52, 0)",
+          boxShadow: "-1px 2px 70px 116px rgba(248, 53, 52, 0)"
+        },
+        {
+          backgroundColor: "rgba(248, 53, 52, 0.4)",
+          boxShadow: "-1px 2px 70px 116px rgba(248, 53, 52, 0.4)"
+        }
+      );
+
+      return tl;
+    },
+
+    showFish() {
+      const tl = gsap.timeline({ repeat: -1 });
+
+      tl.add(this.showFish__darkenBackground(), 0.1);
+      tl.add(this.showFish__showFish(), 0.1);
+      tl.add(this.showFish__setEffectVisibility(), 0.3);
+      tl.add(this.showFish__showText(), 0.5);
+      tl.add(
+        this.points === 0
+          ? this.showFish__showLoseGlow()
+          : this.showFish__rotateGlows(),
+        0.5
+      );
+    },
+
+    showElement(element) {
+      const tl = gsap.timeline();
+
+      tl.fromTo(
+        element,
         2,
         {
           scale: 0,
@@ -233,18 +489,19 @@ export default {
           visibility: "visible"
         }
       );
+
+      return tl;
     },
 
     setIndicator(scale) {
       const arrow = document.getElementById("indicator__arrow");
-      const tl = gsap.timeline();
 
-      tl.to(this.indicator, 0.15, {
+      this.gsap.to(this.indicator, 0.15, {
         scale: this.isBaiting ? 0 : scale,
         autoAlpha: 1
       });
-      tl.to(arrow, 0.5, {
-        y: "+=5px",
+      this.gsap.to(arrow, 0.3, {
+        y: scale === 0 ? "-=5px" : "+=5px",
         yoyo: true,
         ease: "power4.in",
         repeat: -1
@@ -343,6 +600,26 @@ $hookHeight: 50px;
     justify-content: center;
     background-size: cover;
 
+    .title-holder {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+
+      .title-1 {
+        position: relative;
+        margin-left: 10px;
+        margin-top: 10px;
+        display: block;
+        visibility: hidden;
+      }
+
+      .title-2 {
+        position: relative;
+        display: block;
+        margin: 0 auto;
+      }
+    }
+
     .winning-effect {
       position: absolute;
       z-index: 1;
@@ -358,25 +635,15 @@ $hookHeight: 50px;
       background-repeat: no-repeat;
       background-position: bottom;
       visibility: hidden;
-      opacity: 0;
 
-      &.lose {
-        width: 40%;
-        height: 40%;
-        background-image: url("../assets/0_light.png");
-        background-size: 50% 50%;
-        background-color: rgba(248, 53, 52, 0.4);
-        box-shadow: -1px 2px 70px 116px rgba(248, 53, 52, 0.4);
-      }
-
-      &.win {
-        width: 100%;
-        height: 100%;
-        background-image: url("../assets/doubleGlow.png");
-        background-size: cover;
+      .winning-effect__glow {
+        position: absolute;
       }
 
       .winning-effect__fish {
+        z-index: 1;
+        visibility: hidden;
+        opacity: 0;
       }
 
       .winning-effect__text {
@@ -384,6 +651,9 @@ $hookHeight: 50px;
         position: relative;
         width: 100%;
         font-size: 1.5rem;
+        font-weight: 900;
+        visibility: hidden;
+        opacity: 0;
 
         h1 {
           position: absolute;
@@ -391,6 +661,22 @@ $hookHeight: 50px;
           transform: translateX(-50%);
           padding: 0;
           margin: 0;
+        }
+
+        .stroke-inner {
+          position: absolute;
+          -webkit-text-stroke: 10px #15488d;
+          z-index: 1;
+        }
+        .stroke-outer {
+          position: absolute;
+          -webkit-text-stroke: 13px #fff;
+        }
+
+        .no-stroke {
+          color: #71cede;
+          position: absolute;
+          z-index: 2;
         }
       }
     }
