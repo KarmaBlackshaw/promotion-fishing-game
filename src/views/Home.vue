@@ -322,7 +322,7 @@ export default {
       tl.to(winningFish, 1, {
         visibility: "visible",
         opacity: 1,
-        scale: this.isMobile ? 1 : 1.3,
+        scale: this.isMobile ? 1 : `1.3`,
         ease: "elastic.out(1, 0.5)"
       });
 
@@ -408,12 +408,12 @@ export default {
           boxShadow: "-1px 2px 70px 116px rgba(0, 0, 0, 0)"
         },
         {
-          width: "40%",
-          height: "40%",
+          width: "30%",
+          height: "30%",
           backgroundSize: "50% 50%",
           borderRadius: "50%",
-          backgroundColor: "rgba(248, 53, 52, 0.4)",
-          boxShadow: "-1px 2px 70px 116px rgba(248, 53, 52, 0.4)"
+          backgroundColor: "rgba(248, 53, 52, 0.2)",
+          boxShadow: "-1px 2px 70px 116px rgba(248, 53, 52, 0.2)"
         },
         0
       );
