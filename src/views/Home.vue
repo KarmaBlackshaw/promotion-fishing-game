@@ -89,7 +89,7 @@ export default {
     isBaiting: false,
 
     timeline: null,
-    points: 1,
+    points: 0,
 
     config: {
       dev: true,
@@ -318,11 +318,12 @@ export default {
     showResult__showFish() {
       const tl = gsap.timeline();
       const winningFish = document.getElementById("winning-effect__fish");
+      const scale = this.isMobile ? `1.1${this.points}` : `1.${this.points}`;
 
       tl.to(winningFish, 1, {
         visibility: "visible",
         opacity: 1,
-        scale: this.isMobile ? `1.1${this.points}` : `1.${this.points}`,
+        scale: Number(scale),
         ease: "elastic.out(1, 0.5)"
       });
 
