@@ -23,14 +23,11 @@
   }
 
   #glow--circular {
-    width: 50%;
+    width: 80%;
   }
 
   #glow--vertical {
-    height: 70%;
-    @media only screen and (max-device-width: 640px) {
-      height: 50%;
-    }
+    height: 80%;
   }
 
   .winning-effect__fish-points {

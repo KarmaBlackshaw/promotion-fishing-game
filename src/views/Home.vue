@@ -1,26 +1,26 @@
 <template>
   <div class="game" @mousemove="mousemove">
     <div class="indicator" id="indicator" v-if="!isTouch">
-      <img src="@/assets/cast.png" class="indicator__text" alt />
-      <img src="@/assets/arrow.png" class="indicator__arrow" id="indicator__arrow" alt />
-      <img src="@/assets/target.png" class="indicator__target" alt />
+      <img src="@/assets/compressed/cast.png" class="indicator__text" alt />
+      <img src="@/assets/compressed/arrow.png" class="indicator__arrow" id="indicator__arrow" alt />
+      <img src="@/assets/compressed/target.png" class="indicator__target" alt />
     </div>
 
     <div class="bait-container" id="bait-container">
-      <img class="bait" id="bait" src="@/assets/lure.png" alt />
+      <img class="bait" id="bait" src="@/assets/compressed/lure.png" alt />
       <div class="wave" id="wave" />
     </div>
 
     <div class="game-content">
       <div class="game-content__title-container">
-        <img src="@/assets/title-1.png" id="title-1" class="title-1" alt />
+        <img src="@/assets/compressed/title-1.png" id="title-1" class="title-1" alt />
         <center>
-          <img src="@/assets/title-2.png" id="title-2" class="title-2" alt />
+          <img src="@/assets/compressed/title-2.png" id="title-2" class="title-2" alt />
         </center>
       </div>
 
       <img
-        :src="require(`@/assets/${isMobile ? 'bg_mob' : 'bg_pc'}.png`)"
+        :src="require(`@/assets/compressed/${isMobile ? 'bg_mob' : 'bg_pc'}.png`)"
         class="game-content__bg"
         id="game-content__bg"
         alt
@@ -28,21 +28,21 @@
 
       <div class="winning-effect" id="winning-effect">
         <img
-          src="@/assets/0_light.png"
+          src="@/assets/compressed/0_light.png"
           v-if="points === 0"
           class="winning-effect__glow"
           id="glow--lose"
           alt
         />
         <img
-          src="@/assets/glow1.png"
+          src="@/assets/compressed/glow1.png"
           v-if="points > 0"
           class="winning-effect__glow"
           id="glow--vertical"
           alt
         />
         <img
-          src="@/assets/glow2.png"
+          src="@/assets/compressed/glow2.png"
           v-if="points > 0"
           class="winning-effect__glow"
           id="glow--circular"
@@ -50,7 +50,7 @@
         />
         <div class="winning-effect__fish-points">
           <img
-            :src="require(`@/assets/fishes/fish${points}.png`)"
+            :src="require(`@/assets/compressed/fishes/fish${points}.png`)"
             class="winning-effect__fish"
             id="winning-effect__fish"
             alt
@@ -108,9 +108,9 @@ export default {
     this.gsap = gsap;
     this.masterTimeline = gsap.timeline;
     this.initElements();
-    this.startBait__switchTitle();
-    this.showResult();
-    this.setWinningEffect();
+    // this.startBait__switchTitle();
+    // this.showResult();
+    // this.setWinningEffect();
   },
 
   computed: {
