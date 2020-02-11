@@ -71,7 +71,7 @@ $gameHeight: $gameWidth / 1.6;
 
     .pond {
       position: absolute;
-      height: 130px;
+      height: 230px;
       background-color: rgba(0, 0, 0, 0);
       border-radius: 50%;
       bottom: 20%;
@@ -82,6 +82,7 @@ $gameHeight: $gameWidth / 1.6;
 
       @media only screen and (max-device-width: 640px) {
         width: 90%;
+        height: 180px;
       }
     }
   }

@@ -225,7 +225,7 @@ export default {
     startBait(e) {
       if (this.isBaiting) return;
 
-      this.points = Math.floor(Math.random() * 5) * 0;
+      this.points = Math.floor(Math.random() * 5);
       this.setWinningEffect(this.points);
 
       let tl = gsap.timeline();
@@ -322,7 +322,7 @@ export default {
       tl.to(winningFish, 1, {
         visibility: "visible",
         opacity: 1,
-        scale: this.isMobile ? 1 : `1.3`,
+        scale: this.isMobile ? `1.1${this.points}` : `1.${this.points}`,
         ease: "elastic.out(1, 0.5)"
       });
 
