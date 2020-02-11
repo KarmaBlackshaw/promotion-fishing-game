@@ -408,12 +408,10 @@ export default {
           boxShadow: "-1px 2px 70px 116px rgba(0, 0, 0, 0)"
         },
         {
-          width: "30%",
-          height: "30%",
-          backgroundSize: "50% 50%",
+          backgroundSize: "contain",
           borderRadius: "50%",
           backgroundColor: "rgba(248, 53, 52, 0.2)",
-          boxShadow: "-1px 2px 70px 116px rgba(248, 53, 52, 0.2)"
+          boxShadow: "-1px 2px 50px 96px rgba(248, 53, 52, 0.2)"
         },
         0
       );
