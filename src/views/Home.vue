@@ -1,6 +1,6 @@
 <template>
   <div class="game" @mousemove="mousemove">
-    <div class="indicator" id="indicator">
+    <div class="indicator" id="indicator" v-if="!isTouch">
       <img src="@/assets/cast.png" class="indicator__text" alt />
       <img src="@/assets/arrow.png" class="indicator__arrow" id="indicator__arrow" alt />
       <img src="@/assets/target.png" class="indicator__target" alt />
@@ -14,10 +14,17 @@
     <div class="game-content">
       <div class="game-content__title-container">
         <img src="@/assets/title-1.png" id="title-1" class="title-1" alt />
-        <img src="@/assets/title-2.png" id="title-2" class="title-2" alt />
+        <center>
+          <img src="@/assets/title-2.png" id="title-2" class="title-2" alt />
+        </center>
       </div>
 
-      <img src="@/assets/Fishing-02.jpg" class="game-content__bg" id="game-content__bg" alt />
+      <img
+        :src="require(`@/assets/${isMobile ? 'bg_mob' : 'bg_pc'}.png`)"
+        class="game-content__bg"
+        id="game-content__bg"
+        alt
+      />
 
       <div class="winning-effect" id="winning-effect">
         <img
@@ -41,26 +48,22 @@
           id="glow--circular"
           alt
         />
-        <img
-          :src="require(`@/assets/fishes/fish${points}.png`)"
-          class="winning-effect__fish"
-          id="winning-effect__fish"
-          alt
-        />
-        <br />
-        <span class="winning-effect__text" id="winning-effect__text">
-          <h1 class="stroke-inner" id="stroke-inner">{{ points * 100 }} P0ints</h1>
-          <h1 class="stroke-outer" id="stroke-outer">{{ points * 100 }} P0ints</h1>
-          <h1 class="no-stroke" id="no-stroke">{{ points * 100 }} P0ints</h1>
-        </span>
+        <div class="winning-effect__fish-points">
+          <img
+            :src="require(`@/assets/fishes/fish${points}.png`)"
+            class="winning-effect__fish"
+            id="winning-effect__fish"
+            alt
+          />
+          <br />
+          <div class="winning-effect__text" id="winning-effect__text">
+            <h1 class="stroke-inner" id="stroke-inner">{{ points * 100 }} P0ints</h1>
+            <h1 class="stroke-outer" id="stroke-outer">{{ points * 100 }} P0ints</h1>
+            <h1 class="no-stroke" id="no-stroke">{{ points * 100 }} P0ints</h1>
+          </div>
+        </div>
       </div>
 
-      <!-- <div
-        class="pond"
-        id="pond"
-        @mouseover="setIndicator(1)"
-        @mouseout="setIndicator(0)"
-      />-->
       <div
         class="pond"
         id="pond"
@@ -86,14 +89,18 @@ export default {
     isBaiting: false,
 
     timeline: null,
-    points: 0,
+    points: 1,
 
     config: {
+      dev: true,
+      yoyoGlows: false,
+      repeatGlows: false,
       floatDuration: 0.75,
       floatHeight: "-=3px",
       biteLureDepth: "+=10",
       biteLureDuration: 0.5,
-      resultBackgroundBrightness: 80
+      resultBackgroundBrightness: 80,
+      glowRotationDuration: 4
     }
   }),
 
@@ -101,11 +108,26 @@ export default {
     this.gsap = gsap;
     this.masterTimeline = gsap.timeline;
     this.initElements();
+    this.startBait__switchTitle();
+    this.showResult();
+    this.setWinningEffect();
+  },
+
+  computed: {
+    isMobile() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+    },
+
+    isTouch() {
+      return "ontouchstart" in document.documentElement;
+    }
   },
 
   watch: {
     isBaiting(val) {
-      this.gsap.to(this.pond, 1, {
+      this.gsap.to(this.pond, 0.15, {
         opacity: val ? 0 : 1,
         ease: val ? "power4.out" : "power4.in"
       });
@@ -132,42 +154,6 @@ export default {
       });
     },
 
-    setWinningEffect() {
-      const strokeInner = document.getElementById("stroke-inner");
-      const strokeOuter = document.getElementById("stroke-outer");
-      const stroke = document.getElementById("no-stroke");
-      const effect = document.getElementById("winning-effect");
-
-      const tl = gsap.timeline();
-      const isWin = this.points > 0;
-
-      tl.set(strokeOuter, {
-        "-webkit-text-stroke": "12px #f2ece8"
-      });
-      tl.set(strokeInner, {
-        "-webkit-text-stroke": `10px #${isWin ? "15488d" : "7c1b1a"}`,
-        zIndex: 1
-      });
-      tl.set(stroke, {
-        color: `#${isWin ? "71cede" : "f83534"}`,
-        zIndex: 2
-      });
-
-      if (isWin) {
-        tl.set(effect, {
-          width: "40%",
-          height: "40%",
-          backgroundSize: "50% 50%"
-        });
-      } else {
-        tl.set(effect, {
-          width: "100%",
-          height: "100%",
-          backgroundSize: "cover"
-        });
-      }
-    },
-
     startBait__animateWave() {
       const tl = gsap.timeline();
 
@@ -190,6 +176,8 @@ export default {
         this.baitContainer,
         1.3,
         {
+          visibility: 0,
+          scale: 0,
           top: e.pageY - 200,
           left: e.pageX - 25
         },
@@ -318,16 +306,7 @@ export default {
       const tl = gsap.timeline();
       const effect = document.getElementById("winning-effect");
 
-      tl.fromTo(
-        effect,
-        1,
-        {
-          visibility: "hidden"
-        },
-        {
-          visibility: "visible"
-        }
-      );
+      tl.to(effect, 0.5, { visibility: "visible" });
 
       return tl;
     },
@@ -336,21 +315,12 @@ export default {
       const tl = gsap.timeline();
       const winningFish = document.getElementById("winning-effect__fish");
 
-      tl.fromTo(
-        winningFish,
-        1,
-        {
-          scale: 0,
-          opacity: 0,
-          visibility: "hidden"
-        },
-        {
-          scale: 1,
-          opacity: 1,
-          visibility: "visible",
-          ease: "elastic.out(1, 0.5)"
-        }
-      );
+      tl.to(winningFish, 1, {
+        visibility: "visible",
+        opacity: 1,
+        scale: 1,
+        ease: "elastic.out(1, 0.5)"
+      });
 
       return tl;
     },
@@ -359,64 +329,44 @@ export default {
       const tl = gsap.timeline();
       const winningText = document.getElementById("winning-effect__text");
 
-      tl.fromTo(
-        winningText,
-        1,
-        {
-          scale: 0,
-          opacity: 0,
-          visibility: "hidden"
-        },
-        {
-          scale: 1,
-          opacity: 1,
-          visibility: "visible",
-          ease: "elastic.out(1, 0.5)"
-        }
-      );
+      tl.to(winningText, 1, {
+        visibility: "visible",
+        scale: 1,
+        opacity: 1,
+        ease: "elastic.out(1, 0.5)"
+      });
 
       return tl;
     },
 
     showResult__rotateGlows() {
-      const tl = gsap.timeline();
+      const tl = gsap.timeline({
+        repeat: this.config.repeatGlows ? -1 : 0,
+        yoyo: this.config.yoyoGlows
+      });
       const verticalGlow = document.getElementById("glow--vertical");
       const circularGlow = document.getElementById("glow--circular");
-      const effect = document.getElementById("winning-effect");
 
-      tl.set(effect, {
-        width: "100%",
-        height: "100%",
-        backgroundSize: "cover"
-      });
-
-      tl.fromTo(
+      tl.to(
         verticalGlow,
-        2,
-        {
-          opacity: 0
-        },
+        this.config.glowRotationDuration,
         {
           opacity: 1,
           visibility: "visible",
           rotate: 540,
-          ease: "power4.out"
+          ease: "power2.inOut"
         },
         0
       );
 
-      tl.fromTo(
+      tl.to(
         circularGlow,
-        2,
-        {
-          ease: "power4.in",
-          opacity: 0
-        },
+        this.config.glowRotationDuration,
         {
           opacity: 1,
           visibility: "visible",
           rotate: -180,
-          ease: "power4.out"
+          ease: "power2.inOut"
         },
         0
       );
@@ -429,22 +379,18 @@ export default {
       const effect = document.getElementById("winning-effect");
       const glow = document.getElementById("glow--lose");
 
-      tl.set(effect, {
-        width: "40%",
-        height: "40%",
-        backgroundSize: "50% 50%"
-      });
-
       tl.fromTo(
         glow,
         2,
         {
-          opacity: 0.7,
+          visibility: "hidden",
+          opacity: 0,
           width: "50&"
         },
         {
+          visibility: "visible",
           opacity: 1,
-          width: "100%",
+          width: "150%",
           yoyo: true
         },
         0
@@ -454,10 +400,14 @@ export default {
         effect,
         0.5,
         {
-          backgroundColor: "rgba(248, 53, 52, 0)",
-          boxShadow: "-1px 2px 70px 116px rgba(248, 53, 52, 0)"
+          backgroundColor: "rgba(0, 0, 0, 0)",
+          boxShadow: "-1px 2px 70px 116px rgba(0, 0, 0, 0)"
         },
         {
+          width: "40%",
+          height: "40%",
+          backgroundSize: "50% 50%",
+          borderRadius: "50%",
           backgroundColor: "rgba(248, 53, 52, 0.4)",
           boxShadow: "-1px 2px 70px 116px rgba(248, 53, 52, 0.4)"
         },
@@ -468,18 +418,58 @@ export default {
     },
 
     showResult() {
-      const tl = gsap.timeline();
+      const repeat = this.config.dev === true ? -1 : 0;
+      const yoyo = this.config.dev === true;
+      const tl = gsap.timeline({ repeat, yoyo });
+      const isWin = this.points > 0;
+
+      tl.add(this.showResult__setEffectVisibility(), 0);
+
+      if (isWin) {
+        tl.add(this.showResult__rotateGlows(), 0);
+      } else {
+        tl.add(this.showResult__showLoseGlow(), 0);
+      }
 
       tl.add(this.showResult__darkenBackground(), 0.1);
       tl.add(this.showResult__showFish(), 0.1);
-      tl.add(this.showResult__setEffectVisibility(), 0.3);
-      tl.add(this.showResult__showText(), 0.5);
-      tl.add(
-        this.points === 0
-          ? this.showResult__showLoseGlow()
-          : this.showResult__rotateGlows(),
-        0.5
-      );
+      tl.add(this.showResult__showText(), 0.3);
+    },
+
+    setWinningEffect() {
+      const strokeInner = document.getElementById("stroke-inner");
+      const strokeOuter = document.getElementById("stroke-outer");
+      const stroke = document.getElementById("no-stroke");
+      const effect = document.getElementById("winning-effect");
+
+      const tl = gsap.timeline();
+      const isWin = this.points > 0;
+
+      tl.set(strokeOuter, {
+        "-webkit-text-stroke": "12px #f2ece8"
+      });
+      tl.set(strokeInner, {
+        "-webkit-text-stroke": `10px #${isWin ? "15488d" : "7c1b1a"}`,
+        zIndex: 1
+      });
+      tl.set(stroke, {
+        color: `#${isWin ? "71cede" : "f83534"}`,
+        zIndex: 2
+      });
+
+      if (isWin) {
+        tl.set(effect, {
+          width: "40%",
+          height: "40%",
+          backgroundSize: "50% 50%"
+        });
+      } else {
+        tl.set(effect, {
+          width: "100%",
+          height: "100%",
+          backgroundSize: "cover"
+        });
+      }
     },
 
     showElement(element) {
@@ -505,6 +495,7 @@ export default {
     },
 
     setIndicator(scale) {
+      if (this.isTouch) return;
       const arrow = document.getElementById("indicator__arrow");
 
       this.gsap.to(this.indicator, 0.15, {
@@ -520,6 +511,8 @@ export default {
     },
 
     mousemove(e) {
+      if (this.isTouch) return;
+
       this.gsap.to(this.indicator, 0.2, {
         left: e.pageX + this.indicator.clientWidth / 2,
         top: e.pageY + this.indicator.clientHeight / 2
@@ -531,186 +524,5 @@ export default {
 
 <style lang="scss" scoped>
 @import "../assets/keyframes";
-@import "../assets/fonts";
-
-$hookWidth: 100px;
-$hookHeight: 50px;
-
-.game {
-  display: flex;
-  justify-content: center;
-  user-select: none;
-
-  .indicator {
-    position: absolute;
-    width: $hookWidth;
-    height: $hookHeight;
-    top: 50%;
-    left: 50%;
-    margin: (-$hookHeight) 0 0 (-$hookWidth);
-    backface-visibility: hidden;
-    z-index: 5;
-    pointer-events: none;
-    animation: floating 0.7s ease-in-out infinite alternate;
-    visibility: hidden;
-    font-size: 1rem;
-    font-weight: bold;
-    color: white;
-
-    .indicator__text {
-      display: block;
-      margin: 0 auto;
-      margin-bottom: 5px;
-      margin-top: -20px;
-    }
-
-    .indicator__arrow {
-      display: block;
-      margin: 0 auto;
-    }
-
-    .indicator__target {
-      display: block;
-      margin: 0 auto;
-    }
-  }
-
-  .bait-container {
-    position: absolute;
-    z-index: 3;
-    width: 50px;
-    text-align: center;
-    visibility: hidden;
-    transform: scale(0);
-
-    .bait {
-      z-index: 3;
-      max-width: 20px;
-    }
-
-    .wave {
-      z-index: 3;
-      height: 0;
-      width: 0;
-      opacity: 1;
-      border-radius: 50%;
-      border: 5px solid #fff;
-      border-bottom: 2px;
-      border-top: 0.5px;
-      background: rgba(0, 0, 0, 0);
-      margin: 0 auto;
-      margin-top: -7px;
-      visibility: hidden;
-    }
-  }
-
-  .game-content {
-    position: relative;
-    height: 500px;
-    width: 800px;
-    background: #0e3741;
-    display: flex;
-    justify-content: center;
-    background-size: cover;
-
-    .game-content__title-container {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-
-      .title-1 {
-        position: relative;
-        margin-left: 10px;
-        margin-top: 10px;
-        display: block;
-        visibility: hidden;
-      }
-
-      .title-2 {
-        position: relative;
-        display: block;
-        margin: 0 auto;
-      }
-    }
-
-    .winning-effect {
-      position: absolute;
-      z-index: 1;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      border: none;
-      background-repeat: no-repeat;
-      background-position: bottom;
-      visibility: hidden;
-
-      .winning-effect__glow {
-        position: absolute;
-      }
-
-      .winning-effect__fish {
-        z-index: 1;
-        visibility: hidden;
-        opacity: 0;
-      }
-
-      .winning-effect__text {
-        font-family: "LuckiestGuy";
-        position: relative;
-        width: 100%;
-        font-size: 1.5rem;
-        font-weight: 900;
-        visibility: hidden;
-        opacity: 0;
-
-        h1 {
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-          padding: 0;
-          margin: 0;
-        }
-
-        .stroke-inner {
-          position: absolute;
-          -webkit-text-stroke: 10px #15488d;
-          z-index: 1;
-        }
-        .stroke-outer {
-          position: absolute;
-          -webkit-text-stroke: 13px #fff;
-        }
-
-        .no-stroke {
-          color: #71cede;
-          position: absolute;
-          z-index: 2;
-        }
-      }
-    }
-
-    .game-content__bg {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .pond {
-      position: absolute;
-      height: 130px;
-      width: 700px;
-      background-color: rgba(0, 0, 0, 0);
-      border-radius: 50%;
-      bottom: 100px;
-      transition: animation 1s;
-      animation: neon 1.5s ease-in-out infinite alternate;
-      // cursor: none;
-    }
-  }
-}
+@import "../assets/main";
 </style>
