@@ -108,9 +108,9 @@ export default {
     this.gsap = gsap;
     this.masterTimeline = gsap.timeline;
     this.initElements();
-    // this.startBait__switchTitle();
-    // this.showResult();
-    // this.setWinningEffect();
+    this.startBait__switchTitle();
+    this.showResult();
+    this.setWinningEffect();
   },
 
   computed: {
@@ -318,7 +318,7 @@ export default {
       tl.to(winningFish, 1, {
         visibility: "visible",
         opacity: 1,
-        scale: 1,
+        scale: this.isMobile ? 1 : 1.3,
         ease: "elastic.out(1, 0.5)"
       });
 

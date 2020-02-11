@@ -43,10 +43,14 @@
       margin: 0;
       text-align: center;
       font-family: "LuckiestGuy";
-      font-size: 1.5rem;
+      font-size: 3rem;
       display: block;
       width: $gameWidth;
       @include hide();
+
+      @media only screen and (max-device-width: 640px) {
+        font-size: 1.5rem;
+      }
 
       .stroke-inner {
         padding: 0;
