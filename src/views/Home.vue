@@ -105,12 +105,15 @@ export default {
   }),
 
   mounted() {
+    gsap.config({
+      autoSleep: 60,
+      force3D: false,
+      nullTargetWarn: false
+    });
+
     this.gsap = gsap;
     this.masterTimeline = gsap.timeline;
     this.initElements();
-    this.startBait__switchTitle();
-    this.showResult();
-    this.setWinningEffect();
   },
 
   computed: {
@@ -218,10 +221,11 @@ export default {
       return tl;
     },
 
+    // Decide fish to get
     startBait(e) {
       if (this.isBaiting) return;
 
-      this.points = Math.floor(Math.random() * 5);
+      this.points = Math.floor(Math.random() * 5) * 0;
       this.setWinningEffect(this.points);
 
       let tl = gsap.timeline();
@@ -426,7 +430,12 @@ export default {
       tl.add(this.showResult__setEffectVisibility(), 0);
 
       if (isWin) {
-        tl.add(this.showResult__rotateGlows(), 0);
+        tl.add(
+          isWin
+            ? this.showResult__rotateGlows()
+            : this.showResult__showLoseGlow(),
+          0
+        );
       } else {
         tl.add(this.showResult__showLoseGlow(), 0);
       }
