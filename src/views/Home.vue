@@ -1,5 +1,5 @@
 <template>
-  <div class="game" @mousemove="mousemove">
+  <div class="fishing-game" @mousemove="mousemove">
     <div class="indicator" id="indicator" v-if="!isTouch">
       <img src="@/assets/compressed/cast.png" class="indicator__text" alt />
       <img src="@/assets/compressed/arrow.png" class="indicator__arrow" id="indicator__arrow" alt />
@@ -18,6 +18,12 @@
           <img src="@/assets/compressed/title-2.png" id="title-2" class="title-2" alt />
         </center>
       </div>
+      <img
+        :src="require(`@/assets/original/fishing-rod.png`)"
+        class="fishing-rod"
+        id="fishing-rod"
+        alt
+      />
 
       <img
         :src="require(`@/assets/compressed/${isMobile ? 'bg_mob' : 'bg_pc'}.png`)"
@@ -71,6 +77,7 @@
         @mouseout="setIndicator(0)"
         @click="startBait"
       />
+      <div class="pond-mask" id="pond-mask" />
     </div>
   </div>
 </template>
@@ -83,6 +90,8 @@ export default {
     baitContainer: null,
     gsap: null,
     pond: null,
+    pondMask: null,
+    rod: null,
     titleOne: null,
     titleTwo: null,
 
@@ -130,7 +139,7 @@ export default {
 
   watch: {
     isBaiting(val) {
-      this.gsap.to(this.pond, 0.15, {
+      this.gsap.to(this.pondMask, 0.15, {
         opacity: val ? 0 : 1,
         ease: val ? "power4.out" : "power4.in"
       });
@@ -145,6 +154,8 @@ export default {
     initElements() {
       this.indicator = document.getElementById("indicator");
       this.pond = document.getElementById("pond");
+      this.pondMask = document.getElementById("pond-mask");
+      this.rod = document.getElementById("fishing-rod");
       this.wave = document.getElementById("wave");
       this.titleOne = document.getElementById("title-1");
       this.titleTwo = document.getElementById("title-2");
@@ -233,8 +244,8 @@ export default {
       this.isBaiting = true;
 
       tl.add(this.startBait__switchTitle(), 0);
-      tl.add(this.startBait__throwLure(e), 0);
-      tl.add(this.startBait__animateWave(), 1);
+      // tl.add(this.startBait__throwLure(e), 0.5);
+      // tl.add(this.startBait__animateWave(), 1);
 
       this.floatLure();
     },
@@ -510,20 +521,35 @@ export default {
         scale: this.isBaiting ? 0 : scale,
         autoAlpha: 1
       });
+
+      if (this.isBaiting) return;
+
       this.gsap.to(arrow, 0.3, {
         y: scale === 0 ? "-=5px" : "+=5px",
         yoyo: true,
         ease: "power4.in",
         repeat: -1
       });
+
+      // gsap.to(this.rod, 0.15, {
+      //   opacity: scale
+      // });
     },
 
     mousemove(e) {
-      if (this.isTouch) return;
+      if (this.isTouch || this.isBaiting) return;
 
       this.gsap.to(this.indicator, 0.2, {
         left: e.pageX + this.indicator.clientWidth / 2,
         top: e.pageY + this.indicator.clientHeight / 2
+      });
+
+      // This is about getting the parent's offset
+      const gameContent = document.getElementsByClassName("game-content")[0];
+      const gameContentX = gameContent.getBoundingClientRect().left;
+
+      this.gsap.to(this.rod, 0.2, {
+        left: e.pageX - (gameContentX + window.scrollX) + 100
       });
     }
   }

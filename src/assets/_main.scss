@@ -16,7 +16,7 @@ $gameWidth: 1300px;
 $gameHeight: $gameWidth / 1.6;
 // ratio is 1.6 x 1
 
-.game {
+.fishing-game {
   display: flex;
   justify-content: center;
   user-select: none;
@@ -31,6 +31,17 @@ $gameHeight: $gameWidth / 1.6;
     display: flex;
     justify-content: center;
     background-size: cover;
+    overflow: hidden;
+
+    .fishing-rod {
+      position: absolute;
+      z-index: 2;
+      border: 1px solid white;
+      pointer-events: none;
+      margin: 0;
+      bottom: 0;
+      max-width: 10xp;
+    }
 
     @media only screen and (min-device-width: 640px) {
       height: $gameHeight;
@@ -72,12 +83,26 @@ $gameHeight: $gameWidth / 1.6;
     .pond {
       position: absolute;
       height: 230px;
+      border-radius: 50%;
+      bottom: 20%;
+      cursor: none;
+      width: 70%;
+      z-index: 10;
+
+      @media only screen and (max-device-width: 640px) {
+        width: 90%;
+        height: 180px;
+      }
+    }
+
+    .pond-mask {
+      position: absolute;
+      height: 230px;
       background-color: rgba(0, 0, 0, 0);
       border-radius: 50%;
       bottom: 20%;
       transition: animation 1s;
       animation: neon 1.5s ease-in-out infinite alternate;
-      cursor: none;
       width: 70%;
 
       @media only screen and (max-device-width: 640px) {
