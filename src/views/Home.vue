@@ -7,15 +7,15 @@
     </div>
 
     <div class="bait-container" id="bait-container">
-      <img class="bait" id="bait" src="@/assets/compressed/lure.png" alt />
+      <img class="bait" id="bait" src="@/assets/svg/lure.svg" alt />
       <div class="wave" id="wave" />
     </div>
 
     <div class="game-content">
       <div class="game-content__title-container">
-        <img src="@/assets/compressed/title-1.png" id="title-1" class="title-1" alt />
+        <img src="@/assets/svg/title-1.svg" id="title-1" class="title-1" alt />
         <center>
-          <img src="@/assets/compressed/title-2.png" id="title-2" class="title-2" alt />
+          <img src="@/assets/svg/title-2.svg" id="title-2" class="title-2" alt />
         </center>
       </div>
       <img
@@ -56,7 +56,7 @@
         />
         <div class="winning-effect__fish-points">
           <img
-            :src="require(`@/assets/compressed/fishes/fish${points}.png`)"
+          :src="require(`@/assets/svg/fishes/fish${points}.svg`)"
             class="winning-effect__fish"
             id="winning-effect__fish"
             alt
@@ -68,12 +68,14 @@
             <h1 class="no-stroke" id="no-stroke">{{ points * 100 }} P0ints</h1>
           </div>
         </div>
+
       </div>
 
       <div
         class="pond"
         id="pond"
         @mouseover="setIndicator(1)"
+        @touchmove="setIndicator(1)"
         @mouseout="setIndicator(0)"
         @click="startBait"
       />
@@ -161,11 +163,37 @@ export default {
       this.titleTwo = document.getElementById("title-2");
       this.baitContainer = document.getElementById("bait-container");
     },
-
     resetElements() {
       this.gsap.set([this.baitContainer, this.lure, this.wave], {
         clearProps: "all"
       });
+    },
+
+    startBait_animateRod() {
+      const tl = gsap.timeline();
+
+      tl.to(
+        this.rod,
+        1,
+        {
+          x: "+=200",
+          rotate: 40,
+          ease: "power4.out"
+        },
+        0
+      );
+      tl.to(
+        this.rod,
+        1,
+        {
+          x: "-=100",
+          rotate: 0,
+          ease: "elastic.out(1, 0.4)"
+        },
+        0.5
+      );
+
+      return tl;
     },
 
     startBait__animateWave() {
@@ -244,8 +272,9 @@ export default {
       this.isBaiting = true;
 
       tl.add(this.startBait__switchTitle(), 0);
-      // tl.add(this.startBait__throwLure(e), 0.5);
-      // tl.add(this.startBait__animateWave(), 1);
+      tl.add(this.startBait_animateRod(), 0.2);
+      tl.add(this.startBait__throwLure(e), 0.2);
+      tl.add(this.startBait__animateWave(), 1);
 
       this.floatLure();
     },
@@ -291,6 +320,16 @@ export default {
       let vue = this;
 
       tl.add(this.catchFish__biteLure(), 0);
+      tl.to(
+        this.rod,
+        0.5,
+        {
+          rotate: 40,
+          ease: "elastic.in(1.5, 0.75)",
+          opacity: 0
+        },
+        0
+      );
       tl.add(this.catchFish__getLure(), 0.3);
       tl.then(x => {
         vue.showResult();
@@ -548,7 +587,7 @@ export default {
       const gameContent = document.getElementsByClassName("game-content")[0];
       const gameContentX = gameContent.getBoundingClientRect().left;
 
-      this.gsap.to(this.rod, 0.2, {
+      this.gsap.to(this.rod, 0.3, {
         left: e.pageX - (gameContentX + window.scrollX) + 100
       });
     }

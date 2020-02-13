@@ -33,18 +33,19 @@ $gameHeight: $gameWidth / 1.6;
     background-size: cover;
     overflow: hidden;
 
+    @media only screen and (min-device-width: 640px) {
+      height: $gameHeight;
+    }
+
     .fishing-rod {
       position: absolute;
-      z-index: 2;
-      border: 1px solid white;
+      z-index: 5;
       pointer-events: none;
       margin: 0;
       bottom: 0;
-      max-width: 10xp;
-    }
-
-    @media only screen and (min-device-width: 640px) {
-      height: $gameHeight;
+      bottom: -120px;
+      max-width: 300px;
+      transform-origin: 100% 100%;
     }
 
     .game-content__title-container {
@@ -58,6 +59,11 @@ $gameHeight: $gameWidth / 1.6;
         margin-top: 10px;
         display: block;
         visibility: hidden;
+        max-width: 100px;
+
+        @media only screen and (max-device-width: 640px) {
+          max-width: 50px;
+        }
       }
 
       .title-2 {
