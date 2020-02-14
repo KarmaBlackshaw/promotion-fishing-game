@@ -56,7 +56,15 @@
         />
         <div class="winning-effect__fish-points">
           <img
-          :src="require(`@/assets/svg/fishes/fish${points}.svg`)"
+            v-if="isMobile"
+            :src="require(`@/assets/compressed/fishes/fish${points}.png`)"
+            class="winning-effect__fish"
+            id="winning-effect__fish"
+            alt
+          />
+          <img
+            v-else
+            :src="require(`@/assets/svg/fishes2/fish${points}.svg`)"
             class="winning-effect__fish"
             id="winning-effect__fish"
             alt
@@ -298,7 +306,12 @@ export default {
       tl.to(this.baitContainer, this.config.biteLureDuration, {
         ease: "power4.out",
         y: this.config.biteLureDepth
-      });
+      }, 0);
+      tl.to(this.rod, 0.5, {
+        rotate: 40,
+        ease: "back.in(1.7)",
+        opacity: 0
+      }, 0);
 
       return tl;
     },
@@ -320,16 +333,7 @@ export default {
       let vue = this;
 
       tl.add(this.catchFish__biteLure(), 0);
-      tl.to(
-        this.rod,
-        0.5,
-        {
-          rotate: 40,
-          ease: "elastic.in(1.5, 0.75)",
-          opacity: 0
-        },
-        0
-      );
+
       tl.add(this.catchFish__getLure(), 0.3);
       tl.then(x => {
         vue.showResult();
@@ -368,7 +372,7 @@ export default {
     showResult__showFish() {
       const tl = gsap.timeline();
       const winningFish = document.getElementById("winning-effect__fish");
-      const scale = this.isMobile ? `1.1${this.points}` : `1.${this.points}`;
+      const scale = this.isMobile ? `1.1${this.points}` : `1.${this.points + 2}`;
 
       tl.to(winningFish, 1, {
         visibility: "visible",
