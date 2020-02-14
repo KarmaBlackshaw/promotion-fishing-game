@@ -1,5 +1,13 @@
 <template>
   <div class="fishing-game" @mousemove="mousemove">
+    <div class="audio-container" style="visibility: visible">
+      <audio src="@/assets/sounds/BG_music1.mp3" id="bg_sound" autoplay loop />
+      <audio src="@/assets/sounds/rod_pull1.mp3" id="pull_sound" />
+      <audio src="@/assets/sounds/rod_throw1.mp3" id="throw_sound" />
+      <audio src="@/assets/sounds/water_drop1.mp3" id="drop_sound" />
+      <audio src="@/assets/sounds/winning1.mp3" id="winning_sound" />
+      <audio src="@/assets/sounds/losing3.mp3" id="losing_sound" />
+    </div>
     <div class="indicator" id="indicator" v-if="!isTouch">
       <img src="@/assets/compressed/cast.png" class="indicator__text" alt />
       <img src="@/assets/compressed/arrow.png" class="indicator__arrow" id="indicator__arrow" alt />
@@ -14,12 +22,17 @@
     <div class="game-content">
       <div class="game-content__title-container">
         <img src="@/assets/svg/title-1.svg" id="title-1" class="title-1" alt />
-        <center>
-          <img src="@/assets/svg/title-2.svg" id="title-2" class="title-2" alt />
-        </center>
+        <img src="@/assets/svg/title-2.svg" id="title-2" class="title-2" alt />
+        <img
+          :src="require(`@/assets/svg/sound_${hasSound ? 'on' : 'off'}.svg`)"
+          id="sound-icon"
+          class="sound-icon"
+          @click="switchSound"
+          alt
+        />
       </div>
       <img
-        :src="require(`@/assets/original/fishing-rod.png`)"
+        :src="require(`@/assets/compressed/fishing-rod.png`)"
         class="fishing-rod"
         id="fishing-rod"
         alt
@@ -76,7 +89,6 @@
             <h1 class="no-stroke" id="no-stroke">{{ points * 100 }} P0ints</h1>
           </div>
         </div>
-
       </div>
 
       <div
@@ -104,8 +116,15 @@ export default {
     rod: null,
     titleOne: null,
     titleTwo: null,
+    soundIcon: null,
+    bgSound: null,
+    pullSound: null,
+    dropSound: null,
+    winningSound: null,
+    losingSound: null,
 
     isBaiting: false,
+    hasSound: null,
 
     timeline: null,
     points: 0,
@@ -133,6 +152,10 @@ export default {
     this.gsap = gsap;
     this.masterTimeline = gsap.timeline;
     this.initElements();
+
+    this.hasSound = !this.isMobile; // autoplay for mobile browsers is not allowed.
+    this.bgSound.volume = 0.5;
+    this.bgSound.play();
   },
 
   computed: {
@@ -169,16 +192,51 @@ export default {
       this.wave = document.getElementById("wave");
       this.titleOne = document.getElementById("title-1");
       this.titleTwo = document.getElementById("title-2");
+      this.soundIcon = document.getElementById("sound-icon");
       this.baitContainer = document.getElementById("bait-container");
+      this.bgSound = document.getElementById("bg_sound");
+      this.pullSound = document.getElementById("pull_sound");
+      this.throwSound = document.getElementById("throw_sound");
+      this.dropSound = document.getElementById("drop_sound");
+      this.winningSound = document.getElementById("winning_sound");
+      this.losingSound = document.getElementById("losing_sound");
     },
+
     resetElements() {
       this.gsap.set([this.baitContainer, this.lure, this.wave], {
         clearProps: "all"
       });
     },
 
+    switchSound() {
+      this.hasSound = !this.hasSound;
+
+      this.hasSound ? this.bgSound.play() : this.bgSound.pause();
+      const volume = this.hasSound ? 1 : 0;
+
+      this.bgSound.volume = this.hasSound ? 0.5 : 0;
+      this.pullSound.volume = volume;
+      this.dropSound.volume = volume;
+      this.winningSound.volume = volume;
+    },
+
+    moveRod(e, distance = 100) {
+      const gameContent = document.getElementsByClassName("game-content")[0];
+      const gameContentX = gameContent.getBoundingClientRect().left;
+
+      this.gsap.to(this.rod, 0.3, {
+        left: e.pageX - (gameContentX + window.scrollX) + distance
+      });
+    },
+
     startBait_animateRod() {
       const tl = gsap.timeline();
+      const vm = this;
+
+      vm.throwSound.volume = 0.5;
+      setTimeout(() => {
+        vm.throwSound.play();
+      }, 400);
 
       tl.to(
         this.rod,
@@ -186,10 +244,18 @@ export default {
         {
           x: "+=200",
           rotate: 40,
-          ease: "power4.out"
+          ease: "power4.out",
+          onStart: () => {
+            if (vm.isMobile) {
+              vm.gsap.to(vm.rod, 1.5, {
+                visibility: "visible"
+              });
+            }
+          }
         },
         0
       );
+
       tl.to(
         this.rod,
         1,
@@ -221,6 +287,7 @@ export default {
 
     startBait__throwLure(e) {
       const tl = gsap.timeline();
+      const vm = this;
 
       tl.fromTo(
         this.baitContainer,
@@ -229,7 +296,12 @@ export default {
           visibility: 0,
           scale: 0,
           top: e.pageY - 200,
-          left: e.pageX - 25
+          left: e.pageX - 25,
+          onComplete: () => {
+            setTimeout(() => {
+              vm.dropSound.play();
+            }, 1300);
+          }
         },
         {
           ease: "elastic.inOut(1, 0.75)",
@@ -255,7 +327,7 @@ export default {
         },
         0
       ).to(
-        this.titleOne,
+        [this.titleOne, this.soundIcon],
         2,
         {
           opacity: 1,
@@ -272,8 +344,13 @@ export default {
     startBait(e) {
       if (this.isBaiting) return;
 
-      this.points = Math.floor(Math.random() * 5);
+      // this.points = Math.floor(Math.random() * 5);
+      this.points = 0;
       this.setWinningEffect(this.points);
+
+      if (this.isMobile) {
+        this.moveRod(e, 10);
+      }
 
       let tl = gsap.timeline();
 
@@ -281,8 +358,8 @@ export default {
 
       tl.add(this.startBait__switchTitle(), 0);
       tl.add(this.startBait_animateRod(), 0.2);
-      tl.add(this.startBait__throwLure(e), 0.2);
-      tl.add(this.startBait__animateWave(), 1);
+      tl.add(this.startBait__throwLure(e), 0.5);
+      tl.add(this.startBait__animateWave(), 1.3);
 
       this.floatLure();
     },
@@ -303,21 +380,33 @@ export default {
     catchFish__biteLure() {
       const tl = gsap.timeline();
 
-      tl.to(this.baitContainer, this.config.biteLureDuration, {
-        ease: "power4.out",
-        y: this.config.biteLureDepth
-      }, 0);
-      tl.to(this.rod, 0.5, {
-        rotate: 40,
-        ease: "back.in(1.7)",
-        opacity: 0
-      }, 0);
+      tl.to(
+        this.baitContainer,
+        this.config.biteLureDuration,
+        {
+          ease: "power4.out",
+          y: this.config.biteLureDepth
+        },
+        0
+      );
+      tl.to(
+        this.rod,
+        0.8,
+        {
+          rotate: 40,
+          ease: "back.in(1.7)",
+          opacity: 0
+        },
+        0
+      );
 
       return tl;
     },
 
     catchFish__getLure() {
       const tl = gsap.timeline();
+
+      this.pullSound.play();
 
       tl.to(this.baitContainer, 0.3, {
         ease: "power4.in",
@@ -333,8 +422,7 @@ export default {
       let vue = this;
 
       tl.add(this.catchFish__biteLure(), 0);
-
-      tl.add(this.catchFish__getLure(), 0.3);
+      tl.add(this.catchFish__getLure(), 0.5);
       tl.then(x => {
         vue.showResult();
         vue.resetElements();
@@ -372,7 +460,9 @@ export default {
     showResult__showFish() {
       const tl = gsap.timeline();
       const winningFish = document.getElementById("winning-effect__fish");
-      const scale = this.isMobile ? `1.1${this.points}` : `1.${this.points + 2}`;
+      const scale = this.isMobile
+        ? `1.1${this.points}`
+        : `1.${this.points + 2}`;
 
       tl.to(winningFish, 1, {
         visibility: "visible",
@@ -480,6 +570,10 @@ export default {
       const tl = gsap.timeline({ repeat, yoyo });
       const isWin = this.points > 0;
 
+      this.bgSound.volume = isWin ? "0.05" : "0";
+
+      isWin ? this.winningSound.play() : this.losingSound.play();
+
       tl.add(this.showResult__setEffectVisibility(), 0);
 
       if (isWin) {
@@ -573,10 +667,6 @@ export default {
         ease: "power4.in",
         repeat: -1
       });
-
-      // gsap.to(this.rod, 0.15, {
-      //   opacity: scale
-      // });
     },
 
     mousemove(e) {
@@ -588,12 +678,7 @@ export default {
       });
 
       // This is about getting the parent's offset
-      const gameContent = document.getElementsByClassName("game-content")[0];
-      const gameContentX = gameContent.getBoundingClientRect().left;
-
-      this.gsap.to(this.rod, 0.3, {
-        left: e.pageX - (gameContentX + window.scrollX) + 100
-      });
+      this.moveRod(e);
     }
   }
 };
