@@ -78,7 +78,7 @@ $gameHeight: $gameWidth / 1.6;
         max-width: 500px;
 
         @media only screen and (max-device-width: 640px) {
-          max-width: 300px;
+          max-width: 200px;
         }
       }
 
@@ -87,7 +87,7 @@ $gameHeight: $gameWidth / 1.6;
         margin-top: 10px;
         margin-right: 10px;
         cursor: pointer;
-        // visibility: hidden;
+        visibility: hidden;
 
         @media only screen and (max-device-width: 640px) {
           max-width: 30px;
