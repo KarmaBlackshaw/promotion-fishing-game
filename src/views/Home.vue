@@ -684,6 +684,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../assets/keyframes";
 @import "../assets/main";
 </style>

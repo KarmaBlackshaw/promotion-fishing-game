@@ -1,10 +1,13 @@
 $hookWidth: 100px;
 $hookHeight: 50px;
 
-@mixin hide {
-  opacity: 0;
-  transform: scale(0);
-  visibility: hidden;
+$gameWidth: 1300px;
+$gameHeight: $gameWidth / 1.6;
+
+@mixin mobile {
+  @media (max-width: 640px) {
+    @content;
+  }
 }
 
 @font-face {
@@ -12,9 +15,15 @@ $hookHeight: 50px;
   src: url("../assets/fonts/LuckiestGuy-Regular.ttf");
 }
 
-$gameWidth: 1300px;
-$gameHeight: $gameWidth / 1.6;
-// ratio is 1.6 x 1
+@keyframes neon {
+  from {
+    box-shadow: 0 0 10px #fff, inset 0 0 20px#fff, inset 0 0 30px#fff, inset 0 0 40px#fff;
+  }
+  to {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0), inset 0 0 5px #fff, inset 0 0 7px 5px #fff, inset 0 0 10px 5px #fff,
+      0 0 5px #fff;
+  }
+}
 
 .fishing-game {
   display: flex;
@@ -23,8 +32,68 @@ $gameHeight: $gameWidth / 1.6;
   width: 100%;
   overflow: hidden;
 
-  @import "./indicator";
-  @import "./bait";
+  .indicator {
+    position: absolute;
+    width: $hookWidth;
+    height: $hookHeight;
+    top: 50%;
+    left: 50%;
+    margin: (-$hookHeight) 0 0 (-$hookWidth);
+    backface-visibility: hidden;
+    z-index: 5;
+    pointer-events: none;
+    animation: floating 0.7s ease-in-out infinite alternate;
+    visibility: hidden;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+
+    .indicator__text {
+      display: block;
+      margin: 0 auto;
+      margin-bottom: 5px;
+      margin-top: -20px;
+    }
+
+    .indicator__arrow {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .indicator__target {
+      display: block;
+      margin: 0 auto;
+    }
+  }
+
+  .bait-container {
+    position: absolute;
+    z-index: 3;
+    width: 50px;
+    text-align: center;
+    visibility: hidden;
+    transform: scale(0);
+
+    .bait {
+      z-index: 3;
+      max-width: 20px;
+    }
+
+    .wave {
+      z-index: 3;
+      height: 0;
+      width: 0;
+      opacity: 1;
+      border-radius: 50%;
+      border: 5px solid #fff;
+      border-bottom: 2px;
+      border-top: 0.5px;
+      background: rgba(0, 0, 0, 0);
+      margin: 0 auto;
+      margin-top: -7px;
+      visibility: hidden;
+    }
+  }
 
   .game-content {
     position: relative;
@@ -32,9 +101,10 @@ $gameHeight: $gameWidth / 1.6;
     justify-content: center;
     background-size: cover;
     overflow: hidden;
+    height: $gameHeight;
 
-    @media only screen and (min-device-width: 640px) {
-      height: $gameHeight;
+    @include mobile {
+      height: 100%;
     }
 
     .fishing-rod {
@@ -47,7 +117,7 @@ $gameHeight: $gameWidth / 1.6;
       max-width: 300px;
       transform-origin: 100% 100%;
 
-      @media only screen and (max-device-width: 640px) {
+      @include mobile {
         visibility: hidden;
       }
     }
@@ -65,7 +135,7 @@ $gameHeight: $gameWidth / 1.6;
         margin-left: 10px;
         visibility: hidden;
 
-        @media only screen and (max-device-width: 640px) {
+        @include mobile {
           max-width: 50px;
           margin-top: 5px;
           margin-left: 5px;
@@ -77,7 +147,7 @@ $gameHeight: $gameWidth / 1.6;
         width: 100%;
         max-width: 500px;
 
-        @media only screen and (max-device-width: 640px) {
+        @include mobile {
           max-width: 200px;
         }
       }
@@ -89,7 +159,7 @@ $gameHeight: $gameWidth / 1.6;
         cursor: pointer;
         visibility: hidden;
 
-        @media only screen and (max-device-width: 640px) {
+        @include mobile {
           max-width: 30px;
           margin-top: 5px;
           margin-right: 5px;
@@ -97,7 +167,103 @@ $gameHeight: $gameWidth / 1.6;
       }
     }
 
-    @import "./winEffect";
+    .winning-effect {
+      position: absolute;
+      z-index: 1;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background-repeat: no-repeat;
+      background-position: bottom;
+      width: 100% !important;
+      height: 100% !important;
+      background-size: cover;
+      visibility: hidden;
+
+      .winning-effect__glow {
+        position: absolute;
+        visibility: hidden;
+        opacity: 0;
+      }
+
+      #glow--circular {
+        width: 80%;
+      }
+
+      #glow--vertical {
+        height: 80%;
+      }
+
+      .winning-effect__fish-points {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        .winning-effect__text {
+          padding: 0;
+          margin: 0;
+          padding: 0;
+          margin: 0;
+          text-align: center;
+          font-family: "LuckiestGuy";
+          font-size: 3rem;
+          display: block;
+          width: $gameWidth;
+          opacity: 0;
+          transform: scale(0);
+          visibility: hidden;
+
+          @include mobile {
+            font-size: 1.5rem;
+          }
+
+          .stroke-inner {
+            padding: 0;
+            margin: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            position: absolute;
+            -webkit-text-stroke: 10px #15488d;
+            z-index: 1;
+          }
+
+          .stroke-outer {
+            padding: 0;
+            margin: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            position: absolute;
+            -webkit-text-stroke: 15px #fff;
+          }
+
+          .no-stroke {
+            padding: 0;
+            margin: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            position: absolute;
+            color: #71cede;
+            z-index: 2;
+          }
+        }
+      }
+
+      .winning-effect__fish {
+        z-index: 1;
+        margin: 0;
+        padding: 0;
+        max-width: 200px;
+        opacity: 0;
+        transform: scale(0);
+        visibility: hidden;
+      }
+    }
 
     .game-content__bg {
       height: 100%;
@@ -114,7 +280,7 @@ $gameHeight: $gameWidth / 1.6;
       width: 70%;
       z-index: 10;
 
-      @media only screen and (max-device-width: 640px) {
+      @include mobile {
         width: 90%;
         height: 180px;
       }
@@ -130,7 +296,7 @@ $gameHeight: $gameWidth / 1.6;
       animation: neon 1.5s ease-in-out infinite alternate;
       width: 70%;
 
-      @media only screen and (max-device-width: 640px) {
+      @include mobile {
         width: 90%;
         height: 180px;
       }
