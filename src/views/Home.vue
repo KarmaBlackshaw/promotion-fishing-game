@@ -344,8 +344,7 @@ export default {
     startBait(e) {
       if (this.isBaiting) return;
 
-      // this.points = Math.floor(Math.random() * 5);
-      this.points = 0;
+      this.points = Math.floor(Math.random() * 5);
       this.setWinningEffect(this.points);
 
       if (this.isMobile) {
