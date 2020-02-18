@@ -1,5 +1,5 @@
 <template>
-  <div class="fishing-game" @mousemove="mousemove" @touchstart="mousemove" @touchmove="mousemove">
+  <div class="fishing-game" @mousemove="mouseMove" @touchstart="mouseMove" @touchmove="mouseMove">
     <div class="audio-container" style="visibility: visible">
       <audio src="@/assets/sounds/BG_music1.mp3" id="bg_sound" loop />
       <audio src="@/assets/sounds/rod_pull1.mp3" id="pull_sound" />
@@ -160,13 +160,15 @@ export default {
 
   computed: {
     isMobile() {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      return /Mobi|Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       );
     },
 
     isTouchable() {
-      return "ontouchstart" in document.documentElement;
+      return (
+        "ontouchstart" in document.documentElement || navigator.maxTouchPoints
+      );
     }
   },
 
@@ -185,14 +187,14 @@ export default {
 
   methods: {
     touchStart(e) {
-      const touch = e.touches[0];
-      this.pondPoints = document.elementFromPoint(touch.pageX, touch.pageY);
+      const { pageX, pageY } = e.touches[0];
+      this.pondPoints = document.elementFromPoint(pageX, pageY);
     },
 
     touchMove(e) {
-      var touch = event.touches[0];
+      const { pageX, pageY } = e.touches[0];
       this.isTouchInsidePond =
-        this.pond === document.elementFromPoint(touch.pageX, touch.pageY);
+        this.pond === document.elementFromPoint(pageX, pageY);
 
       this.setIndicator(this.isTouchInsidePond ? 1 : 0);
     },
@@ -275,11 +277,7 @@ export default {
           scale: 0,
           top: top - 200,
           left: left - 25,
-          onComplete: () => {
-            setTimeout(() => {
-              vm.dropSound.play();
-            }, 1300);
-          }
+          onComplete: () => setTimeout(() => vm.dropSound.play(), 1300)
         },
         {
           ease: "elastic.inOut(1, 0.75)",
@@ -297,9 +295,7 @@ export default {
       const tl = gsap.timeline();
       const vm = this;
 
-      setTimeout(() => {
-        this.throwSound.play();
-      }, 400);
+      setTimeout(() => this.throwSound.play(), 400);
 
       tl.to(
         this.rod,
@@ -345,6 +341,7 @@ export default {
         repeat: 2,
         opacity: 0
       });
+
       return tl;
     },
 
@@ -372,7 +369,7 @@ export default {
       return tl;
     },
 
-    // Initialize fish to win
+    // Get win fish from API
     startBait(e) {
       if (this.isBaiting || !this.isTouchInsidePond) return;
 
@@ -667,10 +664,10 @@ export default {
       });
     },
 
-    mousemove(e) {
+    mouseMove(e) {
       if (this.isBaiting) return;
 
-      // catch mobiles and/or laptop with touch support
+      // catch mobiles and/or devices with touch support
       if (e.touches && (this.isMobile || this.isTouchable)) {
         this.gsap.to(this.indicator, 0.3, {
           left: e.touches[0].clientX + this.indicator.clientWidth / 2,

@@ -142,7 +142,7 @@ $gameHeight: $gameWidth / 1.6;
       align-items: flex-start;
 
       .title-1 {
-        max-width: 100px;
+        max-width: 200px;
         margin-top: 10px;
         margin-left: 10px;
         visibility: hidden;
@@ -155,7 +155,9 @@ $gameHeight: $gameWidth / 1.6;
       }
 
       .title-2 {
-        position: relative;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
         width: 100%;
         margin-top: 40px;
         max-width: 600px;
