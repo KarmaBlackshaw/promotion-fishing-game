@@ -157,8 +157,8 @@ $gameHeight: $gameWidth / 1.6;
       .title-2 {
         position: relative;
         width: 100%;
-        margin-top: 50px;
-        max-width: 500px;
+        margin-top: 40px;
+        max-width: 600px;
 
         @include mobile {
           position: absolute;

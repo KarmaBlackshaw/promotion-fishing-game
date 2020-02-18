@@ -16,7 +16,7 @@
     </div>
 
     <div class="bait-container" id="bait-container">
-      <img class="bait" id="bait" src="@/assets/svg/lure.svg" alt />
+      <img class="bait" id="bait" :src="requireImage('lure')" alt />
       <div class="wave" id="wave" />
     </div>
 
