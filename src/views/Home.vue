@@ -1,14 +1,15 @@
 <template>
-  <div class="fishing-game" @mousemove="mousemove">
+  <div class="fishing-game" @mousemove="mousemove" @touchstart="mousemove" @touchmove="mousemove">
     <div class="audio-container" style="visibility: visible">
-      <audio src="@/assets/sounds/BG_music1.mp3" id="bg_sound" autoplay loop />
+      <audio src="@/assets/sounds/BG_music1.mp3" id="bg_sound" loop />
       <audio src="@/assets/sounds/rod_pull1.mp3" id="pull_sound" />
       <audio src="@/assets/sounds/rod_throw1.mp3" id="throw_sound" />
       <audio src="@/assets/sounds/water_drop1.mp3" id="drop_sound" />
       <audio src="@/assets/sounds/winning1.mp3" id="winning_sound" />
       <audio src="@/assets/sounds/losing3.mp3" id="losing_sound" />
     </div>
-    <div class="indicator" id="indicator" v-if="!isTouch">
+    <!-- v-show="isTouchInsidePond" -->
+    <div class="indicator" id="indicator">
       <img src="@/assets/compressed/cast.png" class="indicator__text" alt />
       <img src="@/assets/compressed/arrow.png" class="indicator__arrow" id="indicator__arrow" alt />
       <img src="@/assets/compressed/target.png" class="indicator__target" alt />
@@ -21,8 +22,8 @@
 
     <div class="game-content">
       <div class="game-content__title-container">
-        <img src="@/assets/svg/title-1.svg" id="title-1" class="title-1" alt />
-        <img src="@/assets/svg/title-2.svg" id="title-2" class="title-2" alt />
+        <img :src="requireImage('title-1')" id="title-1" class="title-1" alt />
+        <img :src="requireImage('title-2')" id="title-2" class="title-2" alt />
         <img
           :src="require(`@/assets/svg/sound_${hasSound ? 'on' : 'off'}.svg`)"
           id="sound-icon"
@@ -69,15 +70,7 @@
         />
         <div class="winning-effect__fish-points">
           <img
-            v-if="isMobile"
-            :src="require(`@/assets/compressed/fishes/fish${points}.png`)"
-            class="winning-effect__fish"
-            id="winning-effect__fish"
-            alt
-          />
-          <img
-            v-else
-            :src="require(`@/assets/svg/fishes2/fish${points}.svg`)"
+            :src="requireImage(`fishes/fish${points}`)"
             class="winning-effect__fish"
             id="winning-effect__fish"
             alt
@@ -95,8 +88,11 @@
         class="pond"
         id="pond"
         @mouseover="setIndicator(1)"
-        @touchmove="setIndicator(1)"
         @mouseout="setIndicator(0)"
+        @touchstart="touchStart"
+        @touchmove="touchMove"
+        @touchend="startBait"
+        @touchcancel="startBait"
         @click="startBait"
       />
       <div class="pond-mask" id="pond-mask" />
@@ -129,6 +125,11 @@ export default {
     timeline: null,
     points: 0,
 
+    // Mobile chuchus
+    lastTouch: null,
+    isTouchInsidePond: true,
+    pondPoints: null,
+
     config: {
       dev: true,
       yoyoGlows: false,
@@ -150,12 +151,11 @@ export default {
     });
 
     this.gsap = gsap;
-    this.masterTimeline = gsap.timeline;
     this.initElements();
 
     this.hasSound = !this.isMobile; // autoplay for mobile browsers is not allowed.
-    this.bgSound.volume = 0.5;
-    this.bgSound.play();
+    // this.bgSound.volume = 0.5;
+    // this.bgSound.play();
   },
 
   computed: {
@@ -165,7 +165,7 @@ export default {
       );
     },
 
-    isTouch() {
+    isTouchable() {
       return "ontouchstart" in document.documentElement;
     }
   },
@@ -184,6 +184,31 @@ export default {
   },
 
   methods: {
+    touchStart(e) {
+      const touch = e.touches[0];
+      this.pondPoints = document.elementFromPoint(touch.pageX, touch.pageY);
+    },
+
+    touchMove(e) {
+      var touch = event.touches[0];
+      this.isTouchInsidePond =
+        this.pond === document.elementFromPoint(touch.pageX, touch.pageY);
+
+      this.setIndicator(this.isTouchInsidePond ? 1 : 0);
+    },
+
+    requireImage(imageName) {
+      return this.isMobile
+        ? require(`@/assets/compressed/${imageName}.png`)
+        : require(`@/assets/svg/${imageName}.svg`);
+    },
+
+    resetElements() {
+      this.gsap.set([this.baitContainer, this.lure, this.wave], {
+        clearProps: "all"
+      });
+    },
+
     initElements() {
       this.indicator = document.getElementById("indicator");
       this.pond = document.getElementById("pond");
@@ -202,12 +227,6 @@ export default {
       this.losingSound = document.getElementById("losing_sound");
     },
 
-    resetElements() {
-      this.gsap.set([this.baitContainer, this.lure, this.wave], {
-        clearProps: "all"
-      });
-    },
-
     switchSound() {
       this.hasSound = !this.hasSound;
 
@@ -224,18 +243,62 @@ export default {
       const gameContent = document.getElementsByClassName("game-content")[0];
       const gameContentX = gameContent.getBoundingClientRect().left;
 
-      this.gsap.to(this.rod, 0.3, {
-        left: e.pageX - (gameContentX + window.scrollX) + distance
-      });
+      if (e.touches) {
+        if (e.type !== "touchend") {
+          this.lastTouch = e.touches[0];
+        }
+
+        this.gsap.to(this.rod, 0.3, {
+          left: this.lastTouch.clientX - (gameContentX + window.scrollX)
+        });
+      } else {
+        this.gsap.to(this.rod, 0.3, {
+          left: e.pageX - (gameContentX + window.scrollX) + distance
+        });
+      }
+    },
+
+    startBait__throwLure(e) {
+      const tl = gsap.timeline();
+      const vm = this;
+
+      const top =
+        this.isMobile || this.isTouchable ? this.lastTouch.pageY : e.pageY;
+      const left =
+        this.isMobile || this.isTouchable ? this.lastTouch.pageX : e.pageX;
+
+      tl.fromTo(
+        this.baitContainer,
+        1.3,
+        {
+          visibility: 0,
+          scale: 0,
+          top: top - 200,
+          left: left - 25,
+          onComplete: () => {
+            setTimeout(() => {
+              vm.dropSound.play();
+            }, 1300);
+          }
+        },
+        {
+          ease: "elastic.inOut(1, 0.75)",
+          top: top - 10,
+          left: left - this.baitContainer.clientHeight,
+          scale: 1,
+          visibility: "visible"
+        }
+      );
+
+      return tl;
     },
 
     startBait_animateRod() {
       const tl = gsap.timeline();
       const vm = this;
 
-      vm.throwSound.volume = 0.5;
       setTimeout(() => {
-        vm.throwSound.play();
+        this.throwSound.play();
       }, 400);
 
       tl.to(
@@ -285,45 +348,13 @@ export default {
       return tl;
     },
 
-    startBait__throwLure(e) {
-      const tl = gsap.timeline();
-      const vm = this;
-
-      tl.fromTo(
-        this.baitContainer,
-        1.3,
-        {
-          visibility: 0,
-          scale: 0,
-          top: e.pageY - 200,
-          left: e.pageX - 25,
-          onComplete: () => {
-            setTimeout(() => {
-              vm.dropSound.play();
-            }, 1300);
-          }
-        },
-        {
-          ease: "elastic.inOut(1, 0.75)",
-          top: e.pageY,
-          left: e.pageX - 25,
-          scale: 1,
-          visibility: "visible"
-        }
-      );
-
-      return tl;
-    },
-
     startBait__switchTitle() {
       const tl = gsap.timeline();
 
       tl.to(
         this.titleTwo,
-        1,
         {
-          opacity: 0,
-          ease: "power4.out"
+          opacity: 0
         },
         0
       ).to(
@@ -332,7 +363,8 @@ export default {
         {
           opacity: 1,
           ease: "power4.in",
-          visibility: "visible"
+          visibility: "visible",
+          display: "inline-block"
         },
         0
       );
@@ -340,9 +372,9 @@ export default {
       return tl;
     },
 
-    // Decide fish to get
+    // Initialize fish to win
     startBait(e) {
-      if (this.isBaiting) return;
+      if (this.isBaiting || !this.isTouchInsidePond) return;
 
       this.points = Math.floor(Math.random() * 5);
       this.setWinningEffect(this.points);
@@ -462,11 +494,12 @@ export default {
       const scale = this.isMobile
         ? `1.1${this.points}`
         : `1.${this.points + 2}`;
+      const isWin = this.points > 0;
 
       tl.to(winningFish, 1, {
         visibility: "visible",
         opacity: 1,
-        scale: Number(scale),
+        scale: Number(isWin ? scale : 0.5),
         ease: "elastic.out(1, 0.5)"
       });
 
@@ -627,56 +660,29 @@ export default {
       }
     },
 
-    showElement(element) {
-      const tl = gsap.timeline();
-
-      tl.fromTo(
-        element,
-        2,
-        {
-          scale: 0,
-          opacity: 0,
-          visibility: "hidden"
-        },
-        {
-          scale: 0.8,
-          opacity: 1,
-          ease: "elastic.out(1, 0.4)",
-          visibility: "visible"
-        }
-      );
-
-      return tl;
-    },
-
     setIndicator(scale) {
-      if (this.isTouch) return;
-      const arrow = document.getElementById("indicator__arrow");
-
       this.gsap.to(this.indicator, 0.15, {
         scale: this.isBaiting ? 0 : scale,
         autoAlpha: 1
       });
-
-      if (this.isBaiting) return;
-
-      this.gsap.to(arrow, 0.3, {
-        y: scale === 0 ? "-=5px" : "+=5px",
-        yoyo: true,
-        ease: "power4.in",
-        repeat: -1
-      });
     },
 
     mousemove(e) {
-      if (this.isTouch || this.isBaiting) return;
+      if (this.isBaiting) return;
 
-      this.gsap.to(this.indicator, 0.2, {
-        left: e.pageX + this.indicator.clientWidth / 2,
-        top: e.pageY + this.indicator.clientHeight / 2
-      });
+      // catch mobiles and/or laptop with touch support
+      if (e.touches && (this.isMobile || this.isTouchable)) {
+        this.gsap.to(this.indicator, 0.3, {
+          left: e.touches[0].clientX + this.indicator.clientWidth / 2,
+          top: e.touches[0].clientY + this.indicator.clientHeight / 2
+        });
+      } else {
+        this.gsap.to(this.indicator, 0.2, {
+          left: e.pageX + this.indicator.clientWidth / 2,
+          top: e.pageY + this.indicator.clientHeight / 2
+        });
+      }
 
-      // This is about getting the parent's offset
       this.moveRod(e);
     }
   }

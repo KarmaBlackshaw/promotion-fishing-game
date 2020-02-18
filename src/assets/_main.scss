@@ -25,6 +25,15 @@ $gameHeight: $gameWidth / 1.6;
   }
 }
 
+@keyframes bounce {
+  from {
+    transform: translateY(4px);
+  }
+  to {
+    transform: translateY(-4px);
+  }
+}
+
 .fishing-game {
   display: flex;
   justify-content: center;
@@ -58,6 +67,8 @@ $gameHeight: $gameWidth / 1.6;
     .indicator__arrow {
       display: block;
       margin: 0 auto;
+
+      animation: bounce 300ms infinite alternate;
     }
 
     .indicator__target {
@@ -118,7 +129,8 @@ $gameHeight: $gameWidth / 1.6;
       transform-origin: 100% 100%;
 
       @include mobile {
-        visibility: hidden;
+        height: 300px;
+        bottom: -80px;
       }
     }
 
@@ -145,10 +157,14 @@ $gameHeight: $gameWidth / 1.6;
       .title-2 {
         position: relative;
         width: 100%;
+        margin-top: 50px;
         max-width: 500px;
 
         @include mobile {
-          max-width: 200px;
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          max-width: 300px;
         }
       }
 
